@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+torch
+--extra-index-url https://download.pytorch.org/whl/cu116
+numpy
+pyaudio
+SpeechRecognition
+git+https://github.com/openai/whisper.git
