@@ -1,0 +1,7 @@
+temp_download/
+build/
+dist/
+test-clean-wav/
+models/
+other_libs_qdq/
+replaces/

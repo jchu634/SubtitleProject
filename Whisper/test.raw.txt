@@ -1,0 +1,4 @@
+Audio file name: test.raw
+Prediction:  Oh Oh Oh Oh Oh Oh a
+Encoder running time: 0.05s, Decoder running time: 97.78s, Other process time: 4.87s
+Real time factor: 3.484, Audio duration: 29.48s, Decoding time: 102.7s
