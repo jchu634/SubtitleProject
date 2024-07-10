@@ -11,7 +11,7 @@ dependencies:
   - llvmdev=10.0.0
   - clangdev
   - antlr
-  - numpy
+  - numpy<2.0.0
   - decorator
   - scipy
   - attrs
