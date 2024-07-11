@@ -8,7 +8,6 @@ from whisper.transcribe import transcribe
 from whisper.model import load_model
 import pyaudiowpatch as pyaudio
 
-
 from datetime import datetime, timedelta
 from queue import Queue
 from time import sleep
@@ -40,7 +39,7 @@ def main():
     recorder = sr.Recognizer()
     recorder.energy_threshold = args.energy_threshold
     # Definitely do this, dynamic energy compensation lowers the energy threshold dramatically to a point where the SpeechRecognizer never stops recording.
-    recorder.dynamic_energy_threshold = False
+    recorder.dynamic_energy_threshold = True
 
     # Important for linux users.
     # Prevents permanent application hang and crash by using the wrong Microphone
@@ -78,11 +77,10 @@ def main():
     else:
         source = sr.Microphone(sample_rate=16000)
 
-    
-    onnx_encoder_path: str = os.path.join("models", "quant-encoder.onnx")
-    onnx_decoder_path: str = os.path.join("models", "quant-decoder.onnx")
+    onnx_encoder_path: str = "models\\float-encoder.onnx"
+    onnx_decoder_path: str = "models\\quant-decoder.onnx"
 
-    encoder_target: str = 'aie'
+    encoder_target: str = 'cpu'
     decoder_target: str = 'aie'
 
     model = load_model('tiny', onnx_encoder_path, onnx_decoder_path, encoder_target, decoder_target)
@@ -136,7 +134,23 @@ def main():
                 audio_np = np.frombuffer(audio_data, dtype=np.int16).astype(np.float32) / 32768.0
 
                 # Read the transcription.
-                result = transcribe(model=model, audio=audio_np, temperature=0, compression_ratio_threshold=2.4, condition_on_previous_text=None, logprob_threshold=-1, language='english')
+                result = transcribe(model=model, 
+                                    audio=audio_np, 
+                                    temperature=[0],
+                                    task = "transcribe",
+                                    language = 'en',
+                                    verbose=False,
+                                    best_of = 5,
+                                    beam_size = 5,
+                                    patience = None,
+                                    length_penalty = 0.08,
+                                    suppress_tokens = "-1",
+                                    initial_prompt = None,
+                                    condition_on_previous_text = None,
+                                    compression_ratio_threshold = 2.4,
+                                    logprob_threshold = -1,
+                                    no_speech_threshold = 0.6
+                                    )
                 text = result['text'].strip()
 
                 # If we detected a pause between recordings, add a new item to our transcription.
