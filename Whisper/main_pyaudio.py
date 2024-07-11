@@ -8,10 +8,35 @@ from whisper.transcribe import transcribe
 from whisper.model import load_model
 import pyaudiowpatch as pyaudio
 
+from AudioBridge import AudioBridge
+
 from datetime import datetime, timedelta
 from queue import Queue
 from time import sleep
 from sys import platform
+
+import uuid
+import wave
+
+def save_debug_audio(audio_np, sample_rate, folder="default"):
+    debug_dir = os.path.join("debug", folder)
+    os.makedirs(debug_dir, exist_ok=True)
+    
+    # Find the next available filename
+    file_index = 0
+    while os.path.exists(os.path.join(debug_dir, f"audio_{file_index}.wav")):
+        file_index += 1
+    
+    debug_filename = os.path.join(debug_dir, f"audio_{file_index}.wav")
+    
+    # Save the audio_np array to a .wav file
+    with wave.open(debug_filename, 'w') as wf:
+        wf.setnchannels(1)  # Mono audio
+        wf.setsampwidth(2)  # 16-bit audio
+        wf.setframerate(sample_rate)
+        wf.writeframes((audio_np * 32768).astype(np.int16).tobytes())
+    
+    return debug_filename
 
 
 def main():
@@ -72,8 +97,7 @@ def main():
     if "Loopback" in audio.get_device_info_by_index(mic)["name"]:
         # Note: Loopback interfaces do not support sample_rates
         # https://github.com/s0d3s/PyAudioWPatch/issues/15#issuecomment-2025114713
-        # source = AudioBridge(device_index=mic)
-        pass
+        source = AudioBridge(device_index=mic)
     else:
         source = sr.Microphone(sample_rate=16000)
 
@@ -84,8 +108,6 @@ def main():
     decoder_target: str = 'aie'
 
     model = load_model('tiny', onnx_encoder_path, onnx_decoder_path, encoder_target, decoder_target)
-
-
 
     record_timeout = args.record_timeout
     phrase_timeout = args.phrase_timeout
@@ -111,6 +133,9 @@ def main():
     # Cue the user that we're ready to go.
     print("Model loaded.\n")
 
+
+    debug_folder = uuid.uuid4().hex
+
     while True:
         try:
             now = datetime.utcnow()
@@ -133,7 +158,11 @@ def main():
                 # Clamp the audio stream frequency to a PCM wavelength compatible default of 32768hz max.
                 audio_np = np.frombuffer(audio_data, dtype=np.int16).astype(np.float32) / 32768.0
 
+                # Save the audio_np array to a .wav file for debugging
+                save_debug_audio(audio_np, source.SAMPLE_RATE, debug_folder)
+
                 # Read the transcription.
+                # Arguments are hard-coded as the model does not fully support alternative options.
                 result = transcribe(model=model, 
                                     audio=audio_np, 
                                     temperature=[0],
