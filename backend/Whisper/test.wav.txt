@@ -1,0 +1,4 @@
+Audio file name: test.wav
+Prediction:  test test test test test test test
+Encoder running time: 0.02s, Decoder running time: 5.98s, Other process time: 0.35s
+Real time factor: 0.754, Audio duration: 8.42s, Decoding time: 6.35s
