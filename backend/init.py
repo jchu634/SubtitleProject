@@ -25,9 +25,9 @@ def create_app():
     # print(Settings.model_dump())
 
     from .home import home
-    from .utilities import transcription
+    from .utilities import sound
     
-    app.include_router(transcription.utils_api)
+    app.include_router(sound.utils_api)
 
     # Always include the home router last as it contains a catch all route which will prevent other routes from being accessed
     app.include_router(home.home_router)
