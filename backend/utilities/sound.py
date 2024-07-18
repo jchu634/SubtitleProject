@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request, Body
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 
-from ..config import Settings
+from config import Settings
 import pyaudiowpatch as pyaudio
 
 

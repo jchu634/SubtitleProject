@@ -5,7 +5,13 @@ import os
 
 library_path = os.path.dirname(os.path.abspath(__file__))
 class settingsModel(BaseSettings):
+    # Whisper Settings
     SOUND_DEVICE: int = 0
+    energy_threshold: int = 1000
+    record_timeout: int = 2
+    phrase_timeout: int = 3
+    
+    
     ENV: str = "development"
     LOGGING: bool = True
 
