@@ -63,26 +63,11 @@ def main():
     # We use SpeechRecognizer to record our audio because it has a nice feature where it can detect when speech ends.
     recorder = sr.Recognizer()
     recorder.energy_threshold = args.energy_threshold
-    # Definitely do this, dynamic energy compensation lowers the energy threshold dramatically to a point where the SpeechRecognizer never stops recording.
+    # Original Comment
+    # Definitely disable this, dynamic energy compensation lowers the energy threshold dramatically to a point where the SpeechRecognizer never stops recording.
+    # Ammended Comment:
+    # This has been enabled as the new intention is to always record audio, as this is meant to be toggled on and off by the user.
     recorder.dynamic_energy_threshold = True
-
-    # Important for linux users.
-    # Prevents permanent application hang and crash by using the wrong Microphone
-    # if 'linux' in platform:
-    #     mic_name = args.default_microphone
-    #     if not mic_name or mic_name == 'list':
-    #         print("Available microphone devices are: ")
-    #         for index, name in enumerate(sr.Microphone.list_microphone_names()):
-    #             print(f"Microphone with name \"{name}\" found")
-    #         return
-    #     else:
-    #         for index, name in enumerate(sr.Microphone.list_microphone_names()):
-    #             if mic_name in name:
-    #                 source = sr.Microphone(sample_rate=16000, device_index=index)
-    #                 break
-    # else:
-    #     source = sr.Microphone(sample_rate=16000)
-
     audio = pyaudio.PyAudio()
 
     for i in range(audio.get_device_count()):
@@ -95,8 +80,7 @@ def main():
 
     mic = int(input("Select Mic: "))
     if "Loopback" in audio.get_device_info_by_index(mic)["name"]:
-        # Note: Loopback interfaces do not support sample_rates
-        # https://github.com/s0d3s/PyAudioWPatch/issues/15#issuecomment-2025114713
+        # Note: Loopback interfaces do not support sample_rates (https://github.com/s0d3s/PyAudioWPatch/issues/15#issuecomment-2025114713)
         source = AudioBridge(device_index=mic)
     else:
         source = sr.Microphone(sample_rate=16000)
@@ -133,7 +117,7 @@ def main():
     # Cue the user that we're ready to go.
     print("Model loaded.\n")
 
-
+    # Generate a uuid for storing audio files for debug purposes
     debug_folder = uuid.uuid4().hex
 
     while True:
@@ -141,11 +125,23 @@ def main():
             now = datetime.utcnow()
             # Pull raw recorded audio from the queue.
             if not data_queue.empty():
+                print("PHRASE STARTED")
                 phrase_complete = False
+
+                # Initialize phrase_start_time if not already set
+                if 'phrase_start_time' not in locals() or phrase_start_time is None:
+                    print("PHRASE TIME RESET")
+                    phrase_start_time = now
+
+
                 # If enough time has passed between recordings, consider the phrase complete.
+                # Additionally, due to model limitations, kill the phrase after 10 seconds as the model becomes less accurate.
                 # Clear the current working audio buffer to start over with the new data.
-                if phrase_time and now - phrase_time > timedelta(seconds=phrase_timeout):
+                if phrase_time and (now - phrase_time > timedelta(seconds=phrase_timeout) or now - phrase_start_time > timedelta(seconds=10)):
                     phrase_complete = True
+                    phrase_start_time = None
+                    print("PHRASE COMPLETE")
+
                 # This is the last time we received new audio data from the queue.
                 phrase_time = now
                 
