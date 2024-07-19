@@ -110,6 +110,7 @@ class AudioBridge(sr.AudioSource):
 from datetime import datetime, timedelta
 from queue import Queue
 from time import sleep
+import asyncio
 
 # Debug Imports
 import uuid
@@ -118,25 +119,7 @@ import wave
 
 transcribe_api = APIRouter(tags=["Transcription"])
 
-class ConnectionManager:
-    def __init__(self):
-        self.active_connections: list[WebSocket] = []
-
-    async def connect(self, websocket: WebSocket):
-        await websocket.accept()
-        self.active_connections.append(websocket)
-
-    def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
-
-    async def send_personal_message(self, message: str, websocket: WebSocket):
-        await websocket.send_text(message)
-
-    async def broadcast(self, message: str):
-        for connection in self.active_connections:
-            await connection.send_text(message)
-
-manager = ConnectionManager()
+active_connections_set = set()
 
 
 def save_debug_audio(audio_np, sample_rate, folder="default"):
@@ -170,8 +153,10 @@ debug_enabled = Settings.ENV == "development"
 
 @transcribe_api.websocket("/transcription_feed")
 async def transcription_ws_endpoint(websocket: WebSocket):
-    await manager.connect(websocket)
-    print(os.getcwd())
+    # await manager.connect(websocket)
+    await websocket.accept()
+    active_connections_set.add(websocket)
+    
     phrase_time = None      # The last time a recording was retrieved from the queue.
     data_queue = Queue()    # Thread safe Queue for passing data from the threaded recording callback.
     recorder = sr.Recognizer()      # We use SpeechRecognizer to record our audio because it has a nice feature where it can detect when speech ends.
@@ -216,7 +201,7 @@ async def transcription_ws_endpoint(websocket: WebSocket):
         if debug_enabled:
             debug_folder = uuid.uuid4().hex     # UUID Folder name for storing debug audio files
 
-        while True:
+        while Settings._enable_transcription:
             now = datetime.utcnow()
             
             # Pull raw recorded audio from the queue.
@@ -280,16 +265,47 @@ async def transcription_ws_endpoint(websocket: WebSocket):
                 await websocket.send_text("[TERMINATE_TRANSCRIPTION]")
                 for line in transcription:
                     await websocket.send_text(line)
+                
+                # This call is neccessary, as the server never realises the client has disconnected otherwise.
+                ack = await websocket.receive_text() # Wait for the client to acknowledge the transcription.
             else:
-                # Infinite loops are bad for processors, must sleep.
-                sleep(0.25)
-
-        # data = await websocket.receive_text()
-        # await websocket.send_text(f"Message text was: {data}")
+                asyncio.sleep(600)  # Infinite loops are bad for processors, must sleep.
     except WebSocketDisconnect:
-        manager.disconnect(websocket)
-
+        websocket.close()
+        print("Client disconnected Normally")
         print("\n\nTranscription:")
         for line in transcription:
             print(line)
+        return
+    except RuntimeError:
+        print("Client disconnected via RuntimeError")
+        print("\n\nTranscription:")
+        for line in transcription:
+            print(line)
+        return
+    except IOError:
+        print("Client disconnected via IOError")
+        print("\n\nTranscription:")
+        for line in transcription:
+            print(line)
+
+
+# # TODO: Fix to not use deprecated FastAPI event handler
+# # Uses deprecated FastAPI event handler 
+# @transcribe_api.on_event("shutdown")
+# async def shutdown():
+#     for websocket in active_connections_set:
+#         await websocket.close()
+
+# @transcribe_api.get("/api/disable_transcription")
+# def disable_transcription():
+#     print("disabled transcription")
+#     Settings._enable_transcription = False
+#     return {"message": "Transcription Disabled"}
+
+# @transcribe_api.get("/api/enable_transcription")
+# def enable_transcription():
+#     print("enabled transcription")
+#     Settings._enable_transcription = True
+#     return {"message": "Transcription Enabled"}
     
