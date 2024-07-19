@@ -11,6 +11,7 @@ class settingsModel(BaseSettings):
     record_timeout: int = 2
     phrase_timeout: int = 3
     
+    _enable_transcription: bool = True
     
     ENV: str = "development"
     LOGGING: bool = True
