@@ -1,4 +1,0 @@
-Audio file name: dictate.wav
-Prediction:  You.
-Encoder running time: 0.01s, Decoder running time: 4.9s, Other process time: 0.29s
-Real time factor: 2.202, Audio duration: 2.36s, Decoding time: 5.2s

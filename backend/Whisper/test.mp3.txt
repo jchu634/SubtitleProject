@@ -1,4 +1,0 @@
-Audio file name: test.mp3
-Prediction:  test test test test test test
-Encoder running time: 0.02s, Decoder running time: 5.24s, Other process time: 0.3s
-Real time factor: 0.661, Audio duration: 8.42s, Decoding time: 5.56s
