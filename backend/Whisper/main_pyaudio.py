@@ -2,18 +2,41 @@
 
 import argparse
 import os
-import shutil
 import numpy as np
 import speech_recognition as sr
 from whisper.transcribe import transcribe
 from whisper.model import load_model
 import pyaudiowpatch as pyaudio
 
+from AudioBridge import AudioBridge
 
 from datetime import datetime, timedelta
 from queue import Queue
 from time import sleep
 from sys import platform
+
+import uuid
+import wave
+
+def save_debug_audio(audio_np, sample_rate, folder="default"):
+    debug_dir = os.path.join("debug", folder)
+    os.makedirs(debug_dir, exist_ok=True)
+    
+    # Find the next available filename
+    file_index = 0
+    while os.path.exists(os.path.join(debug_dir, f"audio_{file_index}.wav")):
+        file_index += 1
+    
+    debug_filename = os.path.join(debug_dir, f"audio_{file_index}.wav")
+    
+    # Save the audio_np array to a .wav file
+    with wave.open(debug_filename, 'w') as wf:
+        wf.setnchannels(1)  # Mono audio
+        wf.setsampwidth(2)  # 16-bit audio
+        wf.setframerate(sample_rate)
+        wf.writeframes((audio_np * 32768).astype(np.int16).tobytes())
+    
+    return debug_filename
 
 
 def main():
@@ -40,26 +63,11 @@ def main():
     # We use SpeechRecognizer to record our audio because it has a nice feature where it can detect when speech ends.
     recorder = sr.Recognizer()
     recorder.energy_threshold = args.energy_threshold
-    # Definitely do this, dynamic energy compensation lowers the energy threshold dramatically to a point where the SpeechRecognizer never stops recording.
-    recorder.dynamic_energy_threshold = False
-
-    # Important for linux users.
-    # Prevents permanent application hang and crash by using the wrong Microphone
-    # if 'linux' in platform:
-    #     mic_name = args.default_microphone
-    #     if not mic_name or mic_name == 'list':
-    #         print("Available microphone devices are: ")
-    #         for index, name in enumerate(sr.Microphone.list_microphone_names()):
-    #             print(f"Microphone with name \"{name}\" found")
-    #         return
-    #     else:
-    #         for index, name in enumerate(sr.Microphone.list_microphone_names()):
-    #             if mic_name in name:
-    #                 source = sr.Microphone(sample_rate=16000, device_index=index)
-    #                 break
-    # else:
-    #     source = sr.Microphone(sample_rate=16000)
-
+    # Original Comment
+    # Definitely disable this, dynamic energy compensation lowers the energy threshold dramatically to a point where the SpeechRecognizer never stops recording.
+    # Ammended Comment:
+    # This has been enabled as the new intention is to always record audio, as this is meant to be toggled on and off by the user.
+    recorder.dynamic_energy_threshold = True
     audio = pyaudio.PyAudio()
 
     for i in range(audio.get_device_count()):
@@ -72,23 +80,18 @@ def main():
 
     mic = int(input("Select Mic: "))
     if "Loopback" in audio.get_device_info_by_index(mic)["name"]:
-        # Note: Loopback interfaces do not support sample_rates
-        # https://github.com/s0d3s/PyAudioWPatch/issues/15#issuecomment-2025114713
-        # source = AudioBridge(device_index=mic)
-        pass
+        # Note: Loopback interfaces do not support sample_rates (https://github.com/s0d3s/PyAudioWPatch/issues/15#issuecomment-2025114713)
+        source = AudioBridge(device_index=mic)
     else:
         source = sr.Microphone(sample_rate=16000)
 
-    
-    onnx_encoder_path: str = os.path.join("models", "quant-encoder.onnx")
-    onnx_decoder_path: str = os.path.join("models", "quant-decoder.onnx")
+    onnx_encoder_path: str = "models\\float-encoder.onnx"
+    onnx_decoder_path: str = "models\\quant-decoder.onnx"
 
-    encoder_target: str = 'aie'
+    encoder_target: str = 'cpu'
     decoder_target: str = 'aie'
 
     model = load_model('tiny', onnx_encoder_path, onnx_decoder_path, encoder_target, decoder_target)
-
-
 
     record_timeout = args.record_timeout
     phrase_timeout = args.phrase_timeout
@@ -104,8 +107,7 @@ def main():
         audio: An AudioData containing the recorded bytes.
         """
         # Grab the raw bytes and push it into the thread safe queue.
-        data = audio.get_wav_data() # Testing
-        # data = audio.get_raw_data()
+        data = audio.get_raw_data()
         data_queue.put(data)
 
     # Create a background thread that will pass us raw audio bytes.
@@ -115,63 +117,66 @@ def main():
     # Cue the user that we're ready to go.
     print("Model loaded.\n")
 
+    # Generate a uuid for storing audio files for debug purposes
+    debug_folder = uuid.uuid4().hex
+
     while True:
         try:
             now = datetime.utcnow()
             # Pull raw recorded audio from the queue.
-            print(data_queue.qsize())
             if not data_queue.empty():
-                print("is there ever any data")
+                print("PHRASE STARTED")
                 phrase_complete = False
+
+                # Initialize phrase_start_time if not already set
+                if 'phrase_start_time' not in locals() or phrase_start_time is None:
+                    print("PHRASE TIME RESET")
+                    phrase_start_time = now
+
+
                 # If enough time has passed between recordings, consider the phrase complete.
+                # Additionally, due to model limitations, kill the phrase after 10 seconds as the model becomes less accurate.
                 # Clear the current working audio buffer to start over with the new data.
-                if phrase_time and now - phrase_time > timedelta(seconds=phrase_timeout):
+                if phrase_time and (now - phrase_time > timedelta(seconds=phrase_timeout) or now - phrase_start_time > timedelta(seconds=10)):
                     phrase_complete = True
+                    phrase_start_time = None
+                    print("PHRASE COMPLETE")
+
                 # This is the last time we received new audio data from the queue.
                 phrase_time = now
                 
-                # # Combine audio data from queue
+                # Combine audio data from queue
                 audio_data = b''.join(data_queue.queue)
                 data_queue.queue.clear()
                 
-                # # Convert in-ram buffer to something the model can use directly without needing a temp file.
-                # # Convert data from 16 bit wide integers to floating point with a width of 32 bits.
-                # # Clamp the audio stream frequency to a PCM wavelength compatible default of 32768hz max.
-                # audio_np = np.frombuffer(audio_data, dtype=np.int16).astype(np.float32) / 32768.0
-
-                # # Read the transcription.
-                # result = transcribe(model=model, audio=audio_np, temperature=0, compression_ratio_threshold=2.4, condition_on_previous_text=None, logprob_threshold=-1, language='english')
-                # text = result['text'].strip()
-                print("started writes")
-                temp_filename = "temp_audio.wav"
-                with open(temp_filename, "wb") as temp_audio:
-                    temp_audio.write(audio_data)        
-                print("stopped writes")
-                
-                
+                # Convert in-ram buffer to something the model can use directly without needing a temp file.
+                # Convert data from 16 bit wide integers to floating point with a width of 32 bits.
+                # Clamp the audio stream frequency to a PCM wavelength compatible default of 32768hz max.
                 audio_np = np.frombuffer(audio_data, dtype=np.int16).astype(np.float32) / 32768.0
 
-                    # Read the transcription.
-                    # result = transcribe(temp_audio.name, fp16=True)
-                print("Does this ever run")
-                result = transcribe(model=model, task="transcribe", 
-                                    audio=audio_np, temperature=0, compression_ratio_threshold=2.4, 
-                                    condition_on_previous_text=None, logprob_threshold=-1, language='en', 
-                                    best_of=5, beam_size=5, patience=None, length_penalty=0.08,
-                                    suppress_tokens="-1", initial_prompt=None, no_speech_threshold=0.6
+                # Save the audio_np array to a .wav file for debugging
+                save_debug_audio(audio_np, source.SAMPLE_RATE, debug_folder)
+
+                # Read the transcription.
+                # Arguments are hard-coded as the model does not fully support alternative options.
+                result = transcribe(model=model, 
+                                    audio=audio_np, 
+                                    temperature=[0],
+                                    task = "transcribe",
+                                    language = 'en',
+                                    verbose=False,
+                                    best_of = 5,
+                                    beam_size = 5,
+                                    patience = None,
+                                    length_penalty = 0.08,
+                                    suppress_tokens = "-1",
+                                    initial_prompt = None,
+                                    condition_on_previous_text = None,
+                                    compression_ratio_threshold = 2.4,
+                                    logprob_threshold = -1,
+                                    no_speech_threshold = 0.6
                                     )
-                                    
-                print("RESULT")
-                print(result)
                 text = result['text'].strip()
-
-
-                # Copy the temporary file to a new location for debugging
-                debug_filename = "debug_audio.wav"
-                shutil.copy(temp_filename, debug_filename)
-
-                # Delete the temporary file
-                os.remove(temp_filename)
 
                 # If we detected a pause between recordings, add a new item to our transcription.
                 # Otherwise edit the existing one.
@@ -181,7 +186,7 @@ def main():
                     transcription[-1] = text
 
                 # Clear the console to reprint the updated transcription.
-                # os.system('cls' if os.name=='nt' else 'clear')
+                os.system('cls' if os.name=='nt' else 'clear')
                 for line in transcription:
                     print(line)
                 # Flush stdout.

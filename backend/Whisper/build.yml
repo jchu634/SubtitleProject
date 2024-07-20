@@ -1,0 +1,8 @@
+# dataset and model files
+useful_files:
+  preprocessed_dataset.zip: 
+    url: https://www.xilinx.com/bin/public/openDownload?filename=preprocessed_dataset.zip
+    extract_path: .
+  model.zip: 
+    url: https://www.xilinx.com/bin/public/openDownload?filename=whisper-v.6-models.zip
+    extract_path: .

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Chat</title>
+    </head>
+    <body>
+        <h1>WebSocket Chat</h1>
+        <form action="" onsubmit="sendMessage(event)">
+            <input type="text" id="messageText" autocomplete="off"/>
+            <button>Send</button>
+        </form>
+        <form action="" onsubmit="disconnect(event)">
+            <button>disconnect</button>
+        </form>
+        <form action="" onsubmit="reconnect(event)">
+            <button>reconnect</button>
+        </form>
+        <ul id='messages'>
+        </ul>
+        <script>
+            var ws = new WebSocket("ws://localhost:6789/transcription_feed");
+            ws.onmessage = function(event) {
+                var messages = document.getElementById('messages')
+                var message = document.createElement('li')
+                var content = document.createTextNode(event.data)
+                message.appendChild(content)
+                messages.appendChild(message)
+                ws.send("ack")
+            };
+            function sendMessage(event) {
+                var input = document.getElementById("messageText")
+                ws.send(input.value)
+                input.value = ''
+                event.preventDefault()
+            }
+            function disconnect(event) {
+                if (ws.readyState === WebSocket.OPEN) {
+                    ws.close();
+                    console.log("disconnected");
+                    // Send GET request to disable transcription after disconnecting
+                    // fetch('/api/disable_transcription')
+                    //     .then(response => {
+                    //         if (response.ok) {
+                    //             console.log("Transcription disabled successfully.");
+                    //         } else {
+                    //             console.error("Failed to disable transcription.");
+                    //         }
+                    //     })
+                    //     .catch(error => console.error('Error:', error));
+                }
+                event.preventDefault();
+            }
+
+            function reconnect() {
+                // Send GET request to enable transcription before reconnecting
+                // fetch('/api/enable_transcription')
+                //     .then(response => {
+                        // if (response.ok) {
+                            // console.log("Transcription enabled successfully.");
+                            if (ws.readyState === WebSocket.CLOSED) {
+                                ws = new WebSocket("ws://localhost:6789/transcription_feed");
+                                ws.onmessage = function(event) {
+                                    var messages = document.getElementById('messages');
+                                    var message = document.createElement('li');
+                                    var content = document.createTextNode(event.data);
+                                    message.appendChild(content);
+                                    messages.appendChild(message);
+                                };
+                            }
+                        // } else {
+                        //     console.error("Failed to enable transcription.");
+                        // }
+                    // })
+                    // .catch(error => console.error('Error:', error));
+            }
+        </script>
+    </body>
+</html>

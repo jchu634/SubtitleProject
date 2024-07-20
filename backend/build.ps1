@@ -45,9 +45,11 @@ $functions = @(
     @{ Action = "install tvm wheel"; Command = { cd $download_temp_folder; pip install --upgrade --force-reinstall tvm-0.8.1-cp39-cp39-win_amd64.whl } },
     @{ Action = "install onnxruntime-vitisai wheel"; Command = { cd onnx-rt; pip install --upgrade --force-reinstall onnxruntime_vitisai-1.15.1-cp39-cp39-win_amd64.whl} },
     @{ Action = "install voe wheel"; Command = { pip install --upgrade --force-reinstall voe-0.1.0-cp39-cp39-win_amd64.whl; python installer.py } },
+    @{ Action = "install numpy again"; Command = { pip install --upgrade --force-reinstall numpy==1.26.4; python installer.py } },
     @{ Action = "replace some files"; Command = { cd ../../replaces; python replace_files.py } },
     @{ Action = "set environment variable"; Command = { Set-Path } },
     @{ Action = "build whisper-onnx demo"; Command = { cd ..; python setup.py install } }
+    # @{ Action = "build whisper-onnx demo"; Command = { cd ..; python -m pip install .} }
 )
 
 foreach ($functionInfo in $functions) {
