@@ -1,4 +1,3 @@
-"use client"
 import Image from "next/image";
 import { Settings } from "lucide-react";
 import {
@@ -35,25 +34,18 @@ import { z } from "zod";
 
 import { useState, useEffect } from "react";
 import React from "react";
+import useSWR from "swr";
 
-function getDevices() {
-  const [devices, setDevices] = useState([]);
+const fetcher = (url: string) => fetch(url).then(r => r.json())
 
-  useEffect(() => {
-    const fetchDevices = async () => {
-      try {
-        const res = await fetch('http://localhost:6789/api/get_sound_devices');
-        const data = await res.json();
-        console.log(data);
-        setDevices(data);
-      } catch (error) {
-        console.error('Error fetching devices', error);
-      }
-    };
-    fetchDevices();
-  }, []); // Add an empty dependency array to run the effect only once
-
-  return devices;
+export function getDevices() {
+  const { data, error, isLoading} = useSWR(
+    'http://localhost:6789/api/get_sound_devices', 
+    fetcher
+  );
+  if (error) return "An error has occurred.";
+  if (isLoading) return "Loading...";
+  return data;
 }
 
 // const FormSchema = z.object({
@@ -71,10 +63,11 @@ function getDevices() {
 // })
 
 export default function Home() {
-  const devices = getDevices()
+  let devices = getDevices()
   
   console.log(devices)
-
+  console.log(devices[0])
+  console.log(typeof(devices))
 
   return (
     <main className="flex min-h-screen flex-col justify-between p-24">
@@ -107,6 +100,9 @@ export default function Home() {
               {/* {devices.map((device: any) => (
                 <SelectItem key={device.index} value={device.index}>{device.name}</SelectItem>
                 ))} */}
+              {Array.isArray(devices) && devices.map((device: any) => (
+                <SelectItem key={device.index} value={device.index}>{device.name}</SelectItem>
+              ))}
             </SelectContent>
 
           </Select>
@@ -129,8 +125,8 @@ export default function Home() {
         </DialogFooter>
       </DialogContent>
         
-    </Dialog>
-    
+      </Dialog>
+              
       
       
     </main>
