@@ -1,3 +1,4 @@
+"use client"
 import Image from "next/image";
 import { Settings } from "lucide-react";
 import {
@@ -16,24 +17,68 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
+import { toast } from "@/components/ui/use-toast";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
-async function getDevices() {
-  const devices = await fetch('http://localhost:6789/api/get_sound_devices')
-  if (!devices.ok){
-    throw new Error('Failed to fetch devices')
-  }
-  return devices.json()
+import { useState, useEffect } from "react";
+import React from "react";
+
+function getDevices() {
+  const [devices, setDevices] = useState([]);
+
+  useEffect(() => {
+    const fetchDevices = async () => {
+      try {
+        const res = await fetch('http://localhost:6789/api/get_sound_devices');
+        const data = await res.json();
+        console.log(data);
+        setDevices(data);
+      } catch (error) {
+        console.error('Error fetching devices', error);
+      }
+    };
+    fetchDevices();
+  }, []); // Add an empty dependency array to run the effect only once
+
+  return devices;
 }
 
-export default async function Home() {
-  const devices = await getDevices()
+// const FormSchema = z.object({
+//   device_index: z
+//     .number({ 
+//       required_error: "Please select sound-device"  
+//     })
+//     .int().nonnegative(),
+    
+//   email: z
+//     .string({
+//       required_error: "Please select an email to display.",
+//     })
+//     .email(),
+// })
+
+export default function Home() {
+  const devices = getDevices()
+  
+  console.log(devices)
+
 
   return (
     <main className="flex min-h-screen flex-col justify-between p-24">
+     
       <Dialog>
       <DialogTrigger asChild>
         <Button className="items-center sm:max-w-[150px]">
@@ -49,17 +94,23 @@ export default async function Home() {
             Make changes to your settings here<br/>Click save when you're done.
           </DialogDescription>
         </DialogHeader>
+
         <div className="grid gap-4 py-2">
+
           <Select>
+            
             <SelectTrigger className="w-[400px]">
               <SelectValue placeholder="Choose a sound input device" />
             </SelectTrigger>
+            
             <SelectContent>
-              {devices.map((device: any) => (
+              {/* {devices.map((device: any) => (
                 <SelectItem key={device.index} value={device.index}>{device.name}</SelectItem>
-                ))}
+                ))} */}
             </SelectContent>
+
           </Select>
+          
           <div className="flex items-center space-x-2">
             <Checkbox id="save" />
             <label
@@ -69,23 +120,17 @@ export default async function Home() {
               Save Transcription after recording.
             </label>
           </div>
+
         </div>
-        <DialogFooter>
-          <Button 
-            type="submit"
-            onClick={(e: React.FormEvent) => {
-              const saveSettings = () => {
-               var settings = {
-                sound_device: (document.getElementById('sound_device') as HTMLInputElement).value,
-               } 
-              }
-              saveSettings()
               
-            }
-          >Save changes</Button>
+            
+        <DialogFooter>
+          <Button type="submit">Save changes</Button>
         </DialogFooter>
       </DialogContent>
+        
     </Dialog>
+    
       
       
     </main>
