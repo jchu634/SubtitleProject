@@ -1,5 +1,7 @@
 import Image from "next/image";
-import { Settings } from "lucide-react";
+import { Settings, Moon, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
+
 import {
   Select,
   SelectContent,
@@ -25,9 +27,16 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 import React, { useState, useEffect } from "react";
 
@@ -107,6 +116,7 @@ export function FetchSettings(){
 
 export default function Home() {
   let devices = getDevices()
+  const { setTheme } = useTheme()
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -176,82 +186,113 @@ export default function Home() {
 
   
   return (
-    <main className="flex min-h-screen flex-col justify-between p-24">
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogTrigger asChild>
-          <Button className="items-center sm:max-w-[50px]" onClick={() => setIsDialogOpen(true)}>
-            {/* Settings  */}
-            <Settings className="h-4 w-4"/>
-          </Button>
-        </DialogTrigger>
+    <main className="flex min-h-screen flex-col justify-normal p-24 space-y-4">
+      <div className="flex items-center"> 
+        <Alert>
+          <AlertDescription>
+            Transcription has not started yet.
+          </AlertDescription>
+        </Alert>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="icon" className="ml-2 mr-2">
+              <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+              <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+              <span className="sr-only">Toggle theme</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => setTheme("light")}>
+              Light
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setTheme("dark")}>
+              Dark
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setTheme("system")}>
+              System
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="items-center sm:max-w-[50px]" size="icon" onClick={() => setIsDialogOpen(true)}>
+              {/* Settings  */}
+              <Settings className="h-4 w-4"/>
+            </Button>
+          </DialogTrigger>
 
-        <DialogContent className="sm:max-w-[450px]">
-          <DialogHeader>
-            <DialogTitle>Settings</DialogTitle>
-            <DialogDescription>
-              Make changes to your settings here<br/>Click save when you're done.
-            </DialogDescription>
-          </DialogHeader>
-
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)}>
-              <div className="grid gap-4 py-2">
-                <FormField
-                  control={form.control}
-                  name="device_index"
-                  render={({ field }) => (
-                    <FormItem>
-                      <Controller
-                        control={form.control}
-                        name="device_index"
-                        render={({ field }) => (
-                            <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value.toString()}>
-                            <SelectTrigger className="w-[400px]">
-                              <SelectValue placeholder="Choose a sound input device" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {Array.isArray(devices) && devices.map((device: any) => (
-                                <SelectItem key={device.index} value={device.index.toString()}>
-                                  {device.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        )}
-                      />
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="saveSubtitles"
-                  render={({ field }) => (
-                    <FormItem>
-                      <div className="flex items-center space-x-2">
-                        <label
-                          htmlFor="save"
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                          Save Transcription after recording.
-                        </label>
-                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <DialogFooter>
-                <Button type="submit">Save changes</Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-      <Button onClick={startWebsocket}>Start Websocket</Button>
-      <Button onClick={stopWebsocket}>Stop Websocket</Button>
+          <DialogContent className="sm:max-w-[450px]">
+            <DialogHeader>
+              <DialogTitle>Settings</DialogTitle>
+              <DialogDescription>
+                Make changes to your settings here<br/>Click save when you're done.
+              </DialogDescription>
+            </DialogHeader>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)}>
+                <div className="grid gap-4 py-2">
+                  <FormField
+                    control={form.control}
+                    name="device_index"
+                    render={({ field }) => (
+                      <FormItem>
+                        <Controller
+                          control={form.control}
+                          name="device_index"
+                          render={({ field }) => (
+                              <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value.toString()}>
+                              <SelectTrigger className="w-[400px]">
+                                <SelectValue placeholder="Choose a sound input device" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {Array.isArray(devices) && devices.map((device: any) => (
+                                  <SelectItem key={device.index} value={device.index.toString()}>
+                                    {device.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="saveSubtitles"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-center space-x-2">
+                          <label
+                            htmlFor="save"
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
+                            Save Transcription after recording.
+                          </label>
+                          <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <DialogFooter>
+                  <Button type="submit">Save changes</Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+      </div>
+      <div className="flex items-center">
+        <Button onClick={startWebsocket} size="lg" className="mr-4">Start Websocket</Button>
+        <Button onClick={stopWebsocket} size="lg">Stop Websocket</Button>
+      </div>
+      
+      
     </main>
   );
 }
