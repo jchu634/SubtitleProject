@@ -154,7 +154,8 @@ export default function Home() {
     });
   }
 
-  let currentTranscription = "";
+  const [phrase, setPhrase] = useState("");
+  const [transcription, setTranscription] = useState<string[]>([]);
   const [wsConnected, setWsConnected] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
 
@@ -169,10 +170,10 @@ export default function Home() {
     };
     ws.onmessage = function(event) {
       console.log(event.data);
-      if (event.data === "[TERMINATE_TRANSCRIPTION]") {
-        currentTranscription = "";
+      if (event.data === "[PHRASE_COMPLETE]") {
+        setTranscription([...transcription, phrase]);
       } else {
-        currentTranscription = event.data;
+        setPhrase(event.data);
       }
       ws.send("ack");
     };
@@ -198,7 +199,7 @@ export default function Home() {
       <div className="flex items-center"> 
         <Alert>
           <AlertDescription>
-            Transcription has not started yet.
+            { phrase || "Transcription has not started yet." }
           </AlertDescription>
         </Alert>
         <DropdownMenu>
