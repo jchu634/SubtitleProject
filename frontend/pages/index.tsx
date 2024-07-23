@@ -38,7 +38,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 // Forms
 import { useForm, Controller } from "react-hook-form";
@@ -110,10 +110,6 @@ const SettingsFormSchema = z.object({
   
 })
 
-export function FetchSettings(){
-
-}
-
 export default function Home() {
   let devices = getDevices()
   const { setTheme } = useTheme()
@@ -158,32 +154,44 @@ export default function Home() {
     });
   }
 
-  let ws: WebSocket;
-  let [wsConnected, setwsConnected] = useState(false);
-  function startWebsocket(){
-    if (wsConnected){
+  let currentTranscription = "";
+  const [wsConnected, setWsConnected] = useState(false);
+  const wsRef = useRef<WebSocket | null>(null);
+
+  function startWebsocket() {
+    if (wsConnected) {
       console.log("Websocket already connected");
       return;
     }
-    ws = new WebSocket("ws://localhost:6789/transcription_feed");
+    const ws = new WebSocket("ws://localhost:6789/transcription_feed");
     ws.onopen = function(e) {
       console.log("Connected to server");
-    }
+    };
     ws.onmessage = function(event) {
       console.log(event.data);
+      if (event.data === "[TERMINATE_TRANSCRIPTION]") {
+        currentTranscription = "";
+      } else {
+        currentTranscription = event.data;
+      }
       ws.send("ack");
-    }
-    setwsConnected(true);
+    };
+    wsRef.current = ws;
+    setWsConnected(true);
   }
-  function stopWebsocket(){
-    if (!wsConnected){
+
+  function stopWebsocket() {
+    if (!wsConnected) {
       console.log("Websocket already disconnected");
       return;
     }
-    ws.close(1000,"Closing connection Normally");
-    setwsConnected(false);
+    if (wsRef.current) {
+      console.log(typeof(wsRef.current));
+      wsRef.current.close(1000, "Closing connection Normally");
+      wsRef.current = null;
+    }
+    setWsConnected(false);
   }
-
   
   return (
     <main className="flex min-h-screen flex-col justify-normal p-24 space-y-4">
