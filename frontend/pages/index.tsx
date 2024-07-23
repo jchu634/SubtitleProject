@@ -171,7 +171,7 @@ export default function Home() {
     ws.onmessage = function(event) {
       console.log(event.data);
       if (event.data === "[PHRASE_COMPLETE]") {
-        setTranscription([...transcription, phrase]);
+        setTranscription(prevTranscription => [...prevTranscription, phrase]);
       } else {
         setPhrase(event.data);
       }
@@ -187,7 +187,7 @@ export default function Home() {
       return;
     }
     if (wsRef.current) {
-      console.log(typeof(wsRef.current));
+      setTranscription(prevTranscription => [...prevTranscription, phrase]);
       wsRef.current.close(1000, "Closing connection Normally");
       wsRef.current = null;
     }
@@ -297,8 +297,11 @@ export default function Home() {
         </Dialog>
       </div>
       <div className="flex items-center">
-        <Button onClick={startWebsocket} size="lg" className="mr-4">Start Websocket</Button>
-        <Button onClick={stopWebsocket} size="lg">Stop Websocket</Button>
+        { !wsConnected ? (
+          <Button onClick={startWebsocket} size="lg" className="mr-4">Start Websocket</Button>
+        ):(
+          <Button variant="destructive" onClick={stopWebsocket} size="lg" className="mr-4">Stop Websocket</Button>
+        )}
       </div>
       
       
