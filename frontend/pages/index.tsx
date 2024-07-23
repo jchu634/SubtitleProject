@@ -120,7 +120,7 @@ export default function Home() {
     resolver: zodResolver(SettingsFormSchema),
     defaultValues: {
       device_index: 0,
-      saveSubtitles: true,
+      saveSubtitles: false,
     },
   });
 
@@ -194,6 +194,12 @@ export default function Home() {
       setTranscription(prevTranscription => [...prevTranscription, phrase]);
       wsRef.current.close(1000, "Closing connection Normally");
       wsRef.current = null;
+    }
+    if (localStorage.getItem("settings") !== null) {
+      const settings = JSON.parse(localStorage.getItem("settings") || "");
+      if (settings.saveSubtitles) {
+        downloadTranscription();
+      }
     }
     setWsConnected(false);
     setDownloadButtonActive(true);
@@ -295,7 +301,7 @@ export default function Home() {
                             htmlFor="save"
                             className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                           >
-                            Save Transcription after recording.
+                            Download Transcription automatically after recording.
                           </label>
                           <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                         </div>
@@ -305,7 +311,7 @@ export default function Home() {
                   />
                 </div>
                 <DialogFooter>
-                  <Button type="submit">Save changes</Button>
+                  <Button type="submit" className="mt-4">Save changes</Button>
                 </DialogFooter>
               </form>
             </Form>
