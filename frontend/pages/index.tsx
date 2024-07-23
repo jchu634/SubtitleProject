@@ -28,9 +28,8 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
-import { ToastAction } from "@/components/ui/toast"
 
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 // Forms
 import { useForm, Controller } from "react-hook-form";
@@ -44,12 +43,47 @@ const fetcher = (url: string) => fetch(url).then(r => r.json())
 
 export function getDevices() {
   const { data, error, isLoading} = useSWR(
-    'http://localhost:6789/api/get_sound_devices', 
+    'http://localhost:6789/api/sound_devices', 
     fetcher
   );
   if (error) return "An error has occurred.";
   if (isLoading) return "Loading...";
   return data;
+}
+
+function setDevices(index: number): Promise<boolean> {
+  console.log("Setting device index to:", index);
+  const fetchPromise = fetch('http://localhost:6789/api/sound_devices', {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ device_index: index }),
+  })
+  .then(response => {
+    console.log('Response:', response);
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return response.json();
+  })
+  .then(data => {
+    console.log('Device set successfully:', data);
+    return true;
+  })
+  .catch(error => {
+    console.error('Error setting device:', error);
+    return false;
+  });
+
+  const timeoutPromise = new Promise<boolean>((resolve) => {
+    setTimeout(() => {
+      console.error('Fetch request timed out');
+      resolve(false);
+    }, 10000); // 10 seconds timeout
+  });
+
+  return Promise.race([fetchPromise, timeoutPromise]);
 }
 
 const FormSchema = z.object({
@@ -67,10 +101,6 @@ const FormSchema = z.object({
   
 })
 
-
-export function SaveSettings(){
-
-}
 export function FetchSettings(){
 
 }
@@ -89,21 +119,69 @@ export default function Home() {
 
   function onSubmit(values: z.infer<typeof FormSchema>) {
     setIsDialogOpen(false); // Close the dialog
-    toast({
-        title: "Settings Saved",
-        description: "Your settings have been successfully saved.",
-        duration: 2000,
-    });
+    localStorage.setItem("settings", JSON.stringify(values));
     console.log('Saved settings:', values);
+    setDevices(values.device_index)
+    .then(set => {
+      console.log(set);
+      if (!set) {
+        toast({
+          title: "Error",
+          description: "Error setting device",
+          duration: 2000,
+        });
+      } else {
+        toast({
+          title: "Settings Saved",
+          description: "Your settings have been set successfully.",
+          duration: 2000,
+        });
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: "Error setting device, please try again later.",
+        duration: 2000,
+      });
+    });
   }
 
+  let ws: WebSocket;
+  let [wsConnected, setwsConnected] = useState(false);
+  function startWebsocket(){
+    if (wsConnected){
+      console.log("Websocket already connected");
+      return;
+    }
+    ws = new WebSocket("ws://localhost:6789/transcription_feed");
+    ws.onopen = function(e) {
+      console.log("Connected to server");
+    }
+    ws.onmessage = function(event) {
+      console.log(event.data);
+      ws.send("ack");
+    }
+    setwsConnected(true);
+  }
+  function stopWebsocket(){
+    if (!wsConnected){
+      console.log("Websocket already disconnected");
+      return;
+    }
+    ws.close(1000,"Closing connection Normally");
+    setwsConnected(false);
+  }
+
+  
   return (
     <main className="flex min-h-screen flex-col justify-between p-24">
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogTrigger asChild>
-          <Button className="items-center sm:max-w-[150px]" onClick={() => setIsDialogOpen(true)}>
-            Settings 
-            <Settings className="ml-2 h-4 w-4"/>
+          <Button className="items-center sm:max-w-[50px]" onClick={() => setIsDialogOpen(true)}>
+            {/* Settings  */}
+            <Settings className="h-4 w-4"/>
           </Button>
         </DialogTrigger>
 
@@ -172,6 +250,8 @@ export default function Home() {
           </Form>
         </DialogContent>
       </Dialog>
+      <Button onClick={startWebsocket}>Start Websocket</Button>
+      <Button onClick={stopWebsocket}>Stop Websocket</Button>
     </main>
   );
 }
