@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Settings, Moon, Sun } from "lucide-react";
+import { Settings, Moon, Sun, Download } from "lucide-react";
 import { useTheme } from "next-themes";
 
 import {
@@ -95,6 +95,7 @@ function setDevices(index: number): Promise<boolean> {
   return Promise.race([fetchPromise, timeoutPromise]);
 }
 
+
 const SettingsFormSchema = z.object({
   device_index: z
     .number({ 
@@ -156,8 +157,10 @@ export default function Home() {
 
   const [phrase, setPhrase] = useState("");
   const [transcription, setTranscription] = useState<string[]>([]);
+  const [downloadButtonActive, setDownloadButtonActive] = useState(false);
   const [wsConnected, setWsConnected] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
+  
 
   function startWebsocket() {
     if (wsConnected) {
@@ -167,6 +170,7 @@ export default function Home() {
     const ws = new WebSocket("ws://localhost:6789/transcription_feed");
     ws.onopen = function(e) {
       console.log("Connected to server");
+      setDownloadButtonActive(false);
     };
     ws.onmessage = function(event) {
       console.log(event.data);
@@ -192,6 +196,18 @@ export default function Home() {
       wsRef.current = null;
     }
     setWsConnected(false);
+    setDownloadButtonActive(true);
+  }
+  
+  function downloadTranscription() {
+    const blob = new Blob(transcription, { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.download = 'transcription.txt';
+    a.href = url;
+    a.click();
+    URL.revokeObjectURL(url);
+    // document.body.removeChild(a);
   }
   
   return (
@@ -301,6 +317,17 @@ export default function Home() {
           <Button onClick={startWebsocket} size="lg" className="mr-4">Start Websocket</Button>
         ):(
           <Button variant="destructive" onClick={stopWebsocket} size="lg" className="mr-4">Stop Websocket</Button>
+        )}
+        {downloadButtonActive ? (
+          <Button size="lg" onClick={downloadTranscription}>
+            <Download className="mr-2"/>
+            Download Transcription
+          </Button>
+        ) : (
+          <Button size="lg" disabled>
+            <Download className="mr-2"/>
+            Download Transcription
+          </Button>
         )}
       </div>
       
