@@ -95,7 +95,7 @@ function setDevices(index: number): Promise<boolean> {
   return Promise.race([fetchPromise, timeoutPromise]);
 }
 
-const FormSchema = z.object({
+const SettingsFormSchema = z.object({
   device_index: z
     .number({ 
       required_error: "Please select sound-device"  
@@ -119,15 +119,15 @@ export default function Home() {
   const { setTheme } = useTheme()
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const form = useForm<z.infer<typeof FormSchema>>({
-    resolver: zodResolver(FormSchema),
+  const form = useForm<z.infer<typeof SettingsFormSchema>>({
+    resolver: zodResolver(SettingsFormSchema),
     defaultValues: {
       device_index: 0,
       saveSubtitles: true,
     },
   });
 
-  function onSubmit(values: z.infer<typeof FormSchema>) {
+  function onSubmit(values: z.infer<typeof SettingsFormSchema>) {
     setIsDialogOpen(false); // Close the dialog
     localStorage.setItem("settings", JSON.stringify(values));
     console.log('Saved settings:', values);
