@@ -6,3 +6,6 @@ models/
 other_libs_qdq/
 replaces/
 debug/
+index.html
+404.html
+_next/
