@@ -50,7 +50,7 @@ import useSWR from "swr";
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
-export function getDevices() {
+export function useDevices() {
   const { data, error, isLoading} = useSWR(
     'http://localhost:6789/api/sound_devices', 
     fetcher
@@ -112,7 +112,7 @@ const SettingsFormSchema = z.object({
 })
 
 export default function Home() {
-  let devices = getDevices()
+  let devices = useDevices()
   const { setTheme } = useTheme()
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -257,7 +257,7 @@ export default function Home() {
             <DialogHeader>
               <DialogTitle>Settings</DialogTitle>
               <DialogDescription>
-                Make changes to your settings here<br/>Click save when you're done.
+                Make changes to your settings here<br/>Click save when you&apos;re done.
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>
