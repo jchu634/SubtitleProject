@@ -17,7 +17,7 @@ class sound_device():
         self.index = index
     
 
-@utils_api.get("/api/get_sound_devices", responses={200: {"description": "Success"}, 404: {"description": "Not Found"}})
+@utils_api.get("/api/sound_devices", responses={200: {"description": "Success"}, 404: {"description": "Not Found"}})
 def get_sound_devices(request: Request):
     """
         Get all available sound devices
@@ -54,7 +54,7 @@ def get_sound_devices(request: Request):
         
     return JSONResponse(devices)
 
-@utils_api.post("/api/set_sound_device", responses={200: {"description": "Success"}, 404: {"description": "Not Found"}})
+@utils_api.put("/api/sound_devices", responses={200: {"description": "Success"}, 404: {"description": "Not Found"}})
 def set_sound_device(request: Request, device_index: int = Body(...)):
     """
         Sets the sound device to use
@@ -62,5 +62,5 @@ def set_sound_device(request: Request, device_index: int = Body(...)):
     try:
         Settings.SOUND_DEVICE = device_index
     except Exception as e:
-        return JSONResponse({"error": str(e)}, 500)    
-    return JSONResponse({"message": "Success"})
+        return JSONResponse({"error": str(e)}, 500)  
+    return JSONResponse({"message": "Success"},200)
