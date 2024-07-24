@@ -143,8 +143,8 @@ def save_debug_audio(audio_np, sample_rate, folder="default"):
     return debug_filename
 
 
-onnx_encoder_path: str = "Whisper\\models\\float-encoder.onnx"
-onnx_decoder_path: str = "Whisper\\models\\quant-decoder.onnx"
+onnx_encoder_path: str = "models\\float-encoder.onnx"
+onnx_decoder_path: str = "models\\quant-decoder.onnx"
 
 encoder_target: str = 'cpu'
 decoder_target: str = 'aie'
