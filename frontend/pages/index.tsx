@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Settings, Moon, Sun, Download } from "lucide-react";
+import { Settings, Moon, Sun, Download, X } from "lucide-react";
 import { useTheme } from "next-themes";
 
 import {
@@ -47,6 +47,16 @@ import { z } from "zod";
 
 // Fetching
 import useSWR from "swr";
+
+declare global {
+  interface Window {
+    pywebview: {
+      api: {
+        kill_window: () => void;
+      };
+    };
+  }
+}
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
@@ -216,8 +226,17 @@ export default function Home() {
     // document.body.removeChild(a);
   }
   
+  function closeWindow(){
+    window.pywebview.api.kill_window()
+  }
+
   return (
     <main className="flex min-h-screen flex-col justify-normal p-24 space-y-4">
+      <div className="flex justify-end w-full">
+        <Button onClick={closeWindow} size="icon" variant="ghost" className="">
+          <X />
+        </Button>
+      </div>
       <div className="flex items-center"> 
         <Alert className="border-4">
           <AlertDescription>
