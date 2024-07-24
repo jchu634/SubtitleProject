@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="500"
+   height="500"
+   viewBox="0 0 132.29166 132.29167"
+   version="1.1"
+   id="svg1"
+   xml:space="preserve"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"><defs
+     id="defs1" /><g
+     id="layer1"><ellipse
+       style="opacity:0.895522;fill:#020817;fill-opacity:1;stroke-width:0.146852"
+       id="path1"
+       cx="66.31176"
+       cy="66.380775"
+       rx="65.831085"
+       ry="66.121689" /><g
+       style="fill:none;stroke:#ffffff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
+       id="g1"
+       transform="matrix(3.2583941,0,0,3.2583941,25.868875,26.842776)"><path
+         d="m 4,22 h 14 a 2,2 0 0 0 2,-2 V 7 L 15,2 H 6 A 2,2 0 0 0 4,4 v 2"
+         id="path1-7"
+         style="stroke:#ffffff;stroke-opacity:1" /><path
+         d="m 14,2 v 4 a 2,2 0 0 0 2,2 h 4"
+         id="path2"
+         style="stroke:#ffffff;stroke-opacity:1" /><circle
+         cx="3"
+         cy="17"
+         r="1"
+         id="circle2"
+         style="stroke:#ffffff;stroke-opacity:1" /><path
+         d="m 2,17 v -3 a 4,4 0 0 1 8,0 v 3"
+         id="path3"
+         style="stroke:#ffffff;stroke-opacity:1" /><circle
+         cx="9"
+         cy="17"
+         r="1"
+         id="circle3"
+         style="stroke:#ffffff;stroke-opacity:1" /></g><g
+       style="fill:none;fill-opacity:1;stroke:#ff2020;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
+       id="g2"
+       transform="matrix(2.2870728,0,0,2.2870728,64.20818,37.302286)"><path
+         d="M 21.174,6.812 A 2.8188812,2.8188812 0 0 0 17.188,2.825 L 3.842,16.174 a 2,2 0 0 0 -0.5,0.83 l -1.321,4.352 a 0.5,0.5 0 0 0 0.623,0.622 l 4.353,-1.32 a 2,2 0 0 0 0.83,-0.497 z"
+         id="path1-8"
+         style="fill:none;fill-opacity:1;stroke:#ff2020;stroke-opacity:1" /><path
+         d="m 15,5 4,4"
+         id="path2-4"
+         style="fill:none;fill-opacity:1;stroke:#ff2020;stroke-opacity:1" /></g></g></svg>
