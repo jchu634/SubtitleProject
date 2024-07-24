@@ -1,5 +1,6 @@
 from config import Settings
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 def create_app():
     tags_metadata = [
@@ -27,6 +28,13 @@ def create_app():
         app = FastAPI(openapi_tags=tags_metadata, docs_url=None, redoc_url=None)
 
     # print(Settings.model_dump())
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
     from home import home
     from utilities import sound, transcription
