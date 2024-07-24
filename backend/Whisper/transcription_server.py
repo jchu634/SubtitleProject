@@ -220,6 +220,8 @@ async def transcription_ws_endpoint(websocket: WebSocket):
                     phrase_complete = True
                     phrase_start_time = None
                     print("PHRASE COMPLETE")
+                    await websocket.send_text("[PHRASE_COMPLETE]")
+
 
                 phrase_time = now   # Last time new audio data was received from the queue.
                 
@@ -261,10 +263,13 @@ async def transcription_ws_endpoint(websocket: WebSocket):
                 else:
                     transcription[-1] = text
 
-                # Clear the console to reprint the updated transcription.
-                await websocket.send_text("[TERMINATE_TRANSCRIPTION]")
-                for line in transcription:
-                    await websocket.send_text(line)
+                # Send only the latest line of transcription to the client.
+                await websocket.send_text(transcription[-1])
+
+                # # Clear the console to reprint the updated transcription.
+                # await websocket.send_text("[TERMINATE_TRANSCRIPTION]")
+                # for line in transcription:
+                #     await websocket.send_text(line)
                 
                 # This call is neccessary, as the server never realises the client has disconnected otherwise.
                 ack = await websocket.receive_text() # Wait for the client to acknowledge the transcription.
