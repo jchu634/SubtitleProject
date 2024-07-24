@@ -38,7 +38,7 @@ def create_app():
 
     from home import home
     from utilities import sound, transcription
-    from Whisper import transcription_server
+    import transcription_server
     
     app.include_router(sound.utils_api)
     app.include_router(transcription.utils_api)

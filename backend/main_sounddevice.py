@@ -3,8 +3,8 @@
 import os
 import numpy as np
 import sounddevice as sd
-from build.lib.whisper.transcribe import transcribe
-from build.lib.whisper.model import load_model
+from whisper.transcribe import transcribe
+from whisper.model import load_model
 from scipy.io.wavfile import write
 
 
