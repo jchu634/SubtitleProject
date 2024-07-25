@@ -77,7 +77,7 @@ function setDevices(index: number): Promise<boolean> {
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ device_index: index }),
+    body: index.toString(),
   })
   .then(response => {
     console.log('Response:', response);
