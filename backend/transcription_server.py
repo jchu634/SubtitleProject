@@ -294,24 +294,4 @@ async def transcription_ws_endpoint(websocket: WebSocket):
         print("\n\nTranscription:")
         for line in transcription:
             print(line)
-
-
-# # TODO: Fix to not use deprecated FastAPI event handler
-# # Uses deprecated FastAPI event handler 
-# @transcribe_api.on_event("shutdown")
-# async def shutdown():
-#     for websocket in active_connections_set:
-#         await websocket.close()
-
-# @transcribe_api.get("/api/disable_transcription")
-# def disable_transcription():
-#     print("disabled transcription")
-#     Settings._enable_transcription = False
-#     return {"message": "Transcription Disabled"}
-
-# @transcribe_api.get("/api/enable_transcription")
-# def enable_transcription():
-#     print("enabled transcription")
-#     Settings._enable_transcription = True
-#     return {"message": "Transcription Enabled"}
     
