@@ -143,11 +143,11 @@ def save_debug_audio(audio_np, sample_rate, folder="default"):
     return debug_filename
 
 
-onnx_encoder_path: str = "models\\float-encoder.onnx"
-onnx_decoder_path: str = "models\\quant-decoder.onnx"
+onnx_encoder_path: str = Settings.onnx_encoder_path
+onnx_decoder_path: str = Settings.onnx_decoder_path
 
-encoder_target: str = 'cpu'
-decoder_target: str = 'aie'
+encoder_target: str = Settings.encoder_target
+decoder_target: str = Settings.decoder_target
 
 model = load_model('tiny', onnx_encoder_path, onnx_decoder_path, encoder_target, decoder_target)
 debug_enabled = Settings.ENV == "development"
@@ -192,13 +192,8 @@ async def transcription_ws_endpoint(websocket: WebSocket):
     # Create a background thread that will pass us raw audio bytes.
     # We could do this manually but SpeechRecognizer provides a nice helper.
     recorder.listen_in_background(source, record_callback, phrase_time_limit=record_timeout)
-
     
-    
-    try:
-        # # Cue the user that we're ready to go.
-        # await websocket.send_text(f"Model loaded.") 
-        
+    try:        
         if debug_enabled:
             debug_folder = uuid.uuid4().hex     # UUID Folder name for storing debug audio files
 
@@ -264,15 +259,11 @@ async def transcription_ws_endpoint(websocket: WebSocket):
                 else:
                     transcription[-1] = text
 
-                # Send only the latest line of transcription to the client.
+                # Send the latest transcription line to the client.
                 await websocket.send_text(transcription[-1])
-
-                # # Clear the console to reprint the updated transcription.
-                # await websocket.send_text("[TERMINATE_TRANSCRIPTION]")
-                # for line in transcription:
-                #     await websocket.send_text(line)
                 
-                # This call is neccessary, as the server never realises the client has disconnected otherwise.
+                # This call is necessary, if the client disconnects without sending a close handshake, 
+                # the server will never realise the client has disconnected and will continue to run.
                 ack = await websocket.receive_text() # Wait for the client to acknowledge the transcription.
             else:
                 asyncio.sleep(600)  # Infinite loops are bad for processors, must sleep.

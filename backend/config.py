@@ -12,6 +12,11 @@ class settingsModel(BaseSettings):
     phrase_timeout: int = 3
     
     _enable_transcription: bool = True
+
+    encoder_target: str = 'cpu'
+    decoder_target: str = 'aie'
+    onnx_encoder_path: str = "models\\float-encoder.onnx"
+    onnx_decoder_path: str = "models\\quant-decoder.onnx"
     
     ENV: str = "development"
     LOGGING: bool = True
