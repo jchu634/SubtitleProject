@@ -22,6 +22,9 @@ class SettingsWindowApi():
     def setWindow(self,window):
         self._window = window
 
+    def create_toast_on_main_window(self, title, message, duration):
+        window.evaluate_js(f"createToast('{title}','{message}',{duration})")
+
 class Api():
     def __init__(self, settings_window=None):
         self.settings_window = settings_window
@@ -40,13 +43,16 @@ class Api():
             self.settings_window.destroy()
             self.settings_window = None
         settingsApi = SettingsWindowApi()
-        self.settings_window = webview.create_window("Settings", "http://localhost:3000/settings", width=535, height=400, frameless=True, js_api=settingsApi)
+        self.settings_window = webview.create_window("Settings", "http://localhost:6789/settings", width=535, height=400, frameless=True, js_api=settingsApi)
         settingsApi.setWindow(self.settings_window)
 
     def kill_settings_window(self):
         if self.settings_window:
             self.settings_window.destroy()
             self.settings_window = None
+    
+    def create_toast_on_main_window(self, title, message, duration):
+        window.evaluate_js(f"createToast('{title}','{message}',{duration})")
 
 if __name__ == "__main__":
     t = threading.Thread(target=start_server)
