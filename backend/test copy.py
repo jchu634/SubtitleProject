@@ -3,7 +3,6 @@ import os
 import numpy as np
 import speech_recognition as sr
 import pyaudiowpatch
-from AudioBridge import AudioBridge
 import audioop
 import torch
 
@@ -21,7 +20,7 @@ class AudioBridge(sr.AudioSource):
     """
     format = pyaudiowpatch.paInt16  # 16-bit int sampling
 
-    def __init__(self, device_index=None, sample_rate=None, chunk_size=1024):
+    def __init__(self, device_index=None, sample_rate=None, chunk_size=512):
         assert device_index is None or isinstance(
             device_index, int), "Device index must be None or an integer"
         assert sample_rate is None or (isinstance(
@@ -147,6 +146,23 @@ def main():
     # Definitely do this, dynamic energy compensation lowers the energy threshold dramatically to a point where the SpeechRecognizer never stops recording.
     recorder.dynamic_energy_threshold = False
 
+    # Important for linux users.
+    # Prevents permanent application hang and crash by using the wrong Microphone
+    # if 'linux' in platform:
+    #     mic_name = args.default_microphone
+    #     if not mic_name or mic_name == 'list':
+    #         print("Available microphone devices are: ")
+    #         for index, name in enumerate(sr.Microphone.list_microphone_names()):
+    #             print(f"Microphone with name \"{name}\" found")
+    #         return
+    #     else:
+    #         for index, name in enumerate(sr.Microphone.list_microphone_names()):
+    #             if mic_name in name:
+    #                 source = sr.Microphone(
+    #                     sample_rate=16000, device_index=index)
+    #                 break
+    # else:
+    #     source = sr.Microphone(sample_rate=16000)
     audio = pyaudiowpatch.PyAudio()
 
     for i in range(audio.get_device_count()):
@@ -158,9 +174,8 @@ def main():
         print("-----------------------------")
 
     mic = int(input("Select Mic: "))
+    # Note: Setting the sample_rate seems to cause errors
     if "Loopback" in audio.get_device_info_by_index(mic)["name"]:
-        # Note: Loopback interfaces do not support sample_rates
-        # https://github.com/s0d3s/PyAudioWPatch/issues/15#issuecomment-2025114713
         source = AudioBridge(device_index=mic)
     else:
         source = sr.Microphone(sample_rate=16000)
@@ -176,7 +191,7 @@ def main():
 
     transcription = ['']
 
-    if "Loopback" not in audio.get_device_info_by_index(mic)["name"]:
+    if "Loopback" in audio.get_device_info_by_index(mic)["name"]:
         with source:
             recorder.adjust_for_ambient_noise(source)
 
@@ -219,6 +234,8 @@ def main():
                 # Clamp the audio stream frequency to a PCM wavelength compatible default of 32768hz max.
                 audio_np = np.frombuffer(
                     audio_data, dtype=np.int16).astype(np.float32) / 32768.0
+
+                audio_bytes = (audio_np * 32768.0).astype(np.int16).tobytes()
 
                 # Read the transcription.
                 result = audio_model.transcribe(
