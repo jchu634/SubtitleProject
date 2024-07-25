@@ -16,11 +16,14 @@ class SettingsWindowApi():
     def log(self, value):
         print(value)
 
-    def kill_settings_window(self):
+    def killSettingsWindow(self):
         self._window.destroy()
     
     def setWindow(self,window):
         self._window = window
+
+    def createToastOnMainWindow(self, title, message, duration):
+        window.evaluate_js(f"createToast('{title}','{message}',{duration})")
 
 class Api():
     def __init__(self, settings_window=None):
@@ -29,14 +32,14 @@ class Api():
     def log(self, value):
         print(value)
 
-    def kill_window(self):
+    def killWindow(self):
         if self.settings_window:
            self.settings_window.destroy()
            self.settings_window = None
         window.destroy()
         sys.exit()
     
-    def spawn_settings_window(self):
+    def spawnSettingsWindow(self):
         if self.settings_window:
             self.settings_window.destroy()
             self.settings_window = None
@@ -44,10 +47,13 @@ class Api():
         self.settings_window = webview.create_window("Settings", "http://localhost:6789/settings", width=535, height=400, frameless=True, js_api=settingsApi)
         settingsApi.setWindow(self.settings_window)
 
-    def kill_settings_window(self):
+    def killSettingsWindow(self):
         if self.settings_window:
             self.settings_window.destroy()
             self.settings_window = None
+    
+    def createToastOnMainWindow(self, title, message, duration):
+        window.evaluate_js(f"createToast('{title}','{message}',{duration})")
 
 if __name__ == "__main__":
     t = threading.Thread(target=start_server)
@@ -61,7 +67,7 @@ if __name__ == "__main__":
         print("Main Window is Closed")
         try:
             print("Terminating Settings Window")
-            api_instance.kill_settings_window()            
+            api_instance.killSettingsWindow()            
         except Exception as e:
             print(e)
     

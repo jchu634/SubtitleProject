@@ -125,31 +125,30 @@ export default function Home() {
       console.log(set);
       if (!set) {
         toast({
-          title: "Error",
-          description: "Error setting device",
-          duration: 2000,
-        });
+            title: "Error",
+            description: "Error setting device",
+            duration: 2000,
+        })
+        window.pywebview.api.createToastOnMainWindow("Error", "Error setting device: Please try again later.", 2000);
+
       } else {
-        toast({
-          title: "Settings Saved",
-          description: "Your settings have been set successfully.",
-          duration: 2000,
-        });
+        window.pywebview.api.createToastOnMainWindow("Settings Saved", "Your settings have been set successfully.", 2000);
+        closeSettingsWindow();
       }
     })
     .catch(error => {
       console.error('Error:', error);
       toast({
         title: "Error",
-        description: "Error setting device, please try again later.",
+        description: "Error setting device",
         duration: 2000,
       });
+      window.pywebview.api.createToastOnMainWindow("Error", "Error setting device: Please try again later.", 2000);
     });
   }
 
   function closeSettingsWindow(){
-    // window.pywebview.api.kill_settings_window()
-    window.pywebview.api.kill_settings_window()
+    window.pywebview.api.killSettingsWindow()
   }
 
   const [open, setOpen] = useState(true);

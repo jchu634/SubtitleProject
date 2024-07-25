@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { toast } from "@/components/ui/use-toast";
 
 import React, { useState, useEffect, useRef } from "react";
 
@@ -18,11 +19,13 @@ declare global {
   interface Window {
     pywebview: {
       api: {
-        kill_window: () => void;
-        spawn_settings_window: () => void;
-        kill_settings_window: () => void;
+        killWindow: () => void;
+        spawnSettingsWindow: () => void;
+        killSettingsWindow: () => void;
+        createToastOnMainWindow: (title: string, description: string, duration: number) => void;
       };
     };
+    createToast: (title: string, description: string, duration: number) => void;
   }
 }
 
@@ -80,6 +83,7 @@ export default function Home() {
     setDownloadButtonActive(true);
   }
   
+  
   function downloadTranscription() {
     const blob = new Blob(transcription, { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
@@ -92,12 +96,25 @@ export default function Home() {
   }
   
   function closeWindow(){
-    window.pywebview.api.kill_window()
+    window.pywebview.api.killWindow()
+  }
+  
+  function openSettings(){
+    window.pywebview.api.spawnSettingsWindow()
   }
 
-  function openSettings(){
-    window.pywebview.api.spawn_settings_window()
+  if (typeof window !== 'undefined') {
+    window.createToast = (title: string, description: string, duration: number) => {
+      toast({
+        title: title,
+        description: description,
+        duration: duration,
+      });
+    };
+  } else {
+    console.error("Window object not available");
   }
+
   return (
     <main className="flex min-h-screen flex-col justify-normal p-24 space-y-4">
       <div className="flex justify-end w-full">
