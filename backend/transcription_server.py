@@ -149,6 +149,7 @@ onnx_decoder_path: str = "models\\quant-decoder.onnx"
 encoder_target: str = 'cpu'
 decoder_target: str = 'aie'
 
+model = load_model('tiny', onnx_encoder_path, onnx_decoder_path, encoder_target, decoder_target)
 debug_enabled = Settings.ENV == "development"
 
 @transcribe_api.websocket("/transcription_feed")
@@ -192,11 +193,11 @@ async def transcription_ws_endpoint(websocket: WebSocket):
     # We could do this manually but SpeechRecognizer provides a nice helper.
     recorder.listen_in_background(source, record_callback, phrase_time_limit=record_timeout)
 
-    model = load_model('tiny', onnx_encoder_path, onnx_decoder_path, encoder_target, decoder_target)
+    
     
     try:
-        # Cue the user that we're ready to go.
-        await websocket.send_text(f"Model loaded.") 
+        # # Cue the user that we're ready to go.
+        # await websocket.send_text(f"Model loaded.") 
         
         if debug_enabled:
             debug_folder = uuid.uuid4().hex     # UUID Folder name for storing debug audio files
