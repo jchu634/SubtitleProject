@@ -19,10 +19,10 @@ declare global {
   interface Window {
     pywebview: {
       api: {
-        kill_window: () => void;
-        spawn_settings_window: () => void;
-        kill_settings_window: () => void;
-        create_toast_on_main_window: (title: string, description: string, duration: number) => void;
+        killWindow: () => void;
+        spawnSettingsWindow: () => void;
+        killSettingsWindow: () => void;
+        createToastOnMainWindow: (title: string, description: string, duration: number) => void;
       };
     };
     createToast: (title: string, description: string, duration: number) => void;
@@ -96,11 +96,11 @@ export default function Home() {
   }
   
   function closeWindow(){
-    window.pywebview.api.kill_window()
+    window.pywebview.api.killWindow()
   }
   
   function openSettings(){
-    window.pywebview.api.spawn_settings_window()
+    window.pywebview.api.spawnSettingsWindow()
   }
 
   if (typeof window !== 'undefined') {
