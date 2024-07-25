@@ -197,7 +197,7 @@ async def transcription_ws_endpoint(websocket: WebSocket):
         if debug_enabled:
             debug_folder = uuid.uuid4().hex     # UUID Folder name for storing debug audio files
 
-        while Settings._enable_transcription:
+        while True:
             now = datetime.utcnow()
             
             # Pull raw recorded audio from the queue.

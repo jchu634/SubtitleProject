@@ -10,8 +10,6 @@ class settingsModel(BaseSettings):
     energy_threshold: int = 1000
     record_timeout: int = 2
     phrase_timeout: int = 3
-    
-    _enable_transcription: bool = True
 
     encoder_target: str = 'cpu'
     decoder_target: str = 'aie'
