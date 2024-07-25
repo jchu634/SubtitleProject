@@ -339,9 +339,9 @@ export default function Home() {
       </div>
       <div className="flex items-center">
         { !wsConnected ? (
-          <Button onClick={startWebsocket} size="lg" className="mr-4">Start Websocket</Button>
+          <Button onClick={startWebsocket} size="lg" className="mr-4">Start Transcribing</Button>
         ):(
-          <Button variant="destructive" onClick={stopWebsocket} size="lg" className="mr-4">Stop Websocket</Button>
+          <Button variant="destructive" onClick={stopWebsocket} size="lg" className="mr-4">Stop Transcribing</Button>
         )}
         {downloadButtonActive ? (
           <Button size="lg" onClick={downloadTranscription}>
