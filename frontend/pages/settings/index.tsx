@@ -124,14 +124,26 @@ export default function Home() {
     .then(set => {
       console.log(set);
       if (!set) {
-        window.pywebview.api.create_toast_on_main_window("Error", "Error setting device", 2000);
+        toast({
+            title: "Error",
+            description: "Error setting device",
+            duration: 2000,
+        })
+        window.pywebview.api.create_toast_on_main_window("Error", "Error setting device: Please try again later.", 2000);
+
       } else {
         window.pywebview.api.create_toast_on_main_window("Settings Saved", "Your settings have been set successfully.", 2000);
+        closeSettingsWindow();
       }
     })
     .catch(error => {
       console.error('Error:', error);
-      window.pywebview.api.create_toast_on_main_window("Error", "Error setting device", 2000);
+      toast({
+        title: "Error",
+        description: "Error setting device",
+        duration: 2000,
+      });
+      window.pywebview.api.create_toast_on_main_window("Error", "Error setting device: Please try again later.", 2000);
     });
   }
 
