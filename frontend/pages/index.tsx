@@ -63,8 +63,23 @@ export default function Home() {
     ws.onmessage = function(event) {
       console.log(event.data);
       if (event.data === "[PHRASE_COMPLETE]") {
-        setTranscription(prevTranscription => [...prevTranscription, phrase]);
+        console.log("Phrase Acknowledged");
+        // setTranscription(prevTranscription => {
+        //   const updatedTranscription = [...prevTranscription, phrase];
+        //   console.log("Updated Transcription" + updatedTranscription); // Log the updated transcription
+        //   return updatedTranscription;
+        // });
+
       } else {
+        // Note: This is supposed to be run when the phrase is complete.
+        // However, there is a bug in the backend which only acknowledges that the phrase is complete sometimes.
+        // Therefore, this is run every time a new transcription is received.
+        // #TODO: Remove this when the backend is fixed.
+        setTranscription(prevTranscription => {
+          const updatedTranscription = [...prevTranscription, phrase];
+          console.log("Updated Transcription" + updatedTranscription); // Log the updated transcription
+          return updatedTranscription;
+        });
         setPhrase(event.data);
       }
       ws.send("ack");
@@ -79,7 +94,11 @@ export default function Home() {
       return;
     }
     if (wsRef.current) {
-      setTranscription(prevTranscription => [...prevTranscription, phrase]);
+      // setTranscription(prevTranscription => {
+      //   const updatedTranscription = [...prevTranscription, phrase];
+      //   console.log("Updated Transcription" + updatedTranscription); // Log the updated transcription
+      //   return updatedTranscription;
+      // });
       wsRef.current.close(1000, "Closing connection Normally");
       wsRef.current = null;
     }
