@@ -44,7 +44,7 @@ class Api():
             self.settings_window.destroy()
             self.settings_window = None
         settingsApi = SettingsWindowApi()
-        self.settings_window = webview.create_window("Settings", "http://localhost:6789/settings", width=535, height=400, frameless=True, js_api=settingsApi)
+        self.settings_window = webview.create_window("Settings", "http://localhost:6789/settings", width=470, height=395, frameless=True, js_api=settingsApi)
         settingsApi.setWindow(self.settings_window)
 
     def killSettingsWindow(self):
