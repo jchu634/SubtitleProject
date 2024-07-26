@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { toast } from "@/components/ui/use-toast";
+import { Label } from "@/components/ui/label";
 
 import React, { useState, useEffect, useRef } from "react";
 
@@ -39,7 +40,15 @@ export default function Home() {
   const [downloadButtonActive, setDownloadButtonActive] = useState(false);
   const [wsConnected, setWsConnected] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
-  
+
+  // useEffect(() => {
+  //   if (typeof window !== 'undefined' && localStorage.getItem("settings") !== null) {
+  //     const settings = JSON.parse(localStorage.getItem("settings") || "");
+  //     if (settings.alwaysOnTop) {
+  //       window.pywebview.api.setWindowAlwaysOnTop(true);
+  //     }
+  //   }
+  // }, []);
 
   function startWebsocket() {
     if (wsConnected) {
@@ -117,8 +126,9 @@ export default function Home() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col justify-normal p-24 space-y-4">
-      <div className="flex justify-end w-full">
+    <main className="flex min-h-screen flex-col justify-normal p-10 space-y-4">
+      <div className="flex justify-between w-full">
+        <Label className="flex items-end">Ryzen AI Subtitles</Label>
         <Button onClick={closeWindow} size="icon" variant="ghost" className="">
           <X />
         </Button>
