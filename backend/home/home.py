@@ -13,8 +13,8 @@ def favicon():
     """
         Serves the favicon
     """
-    if os.path.exists(os.path.join(frontend_path,"static/favicon.ico")):
-        return FileResponse(os.path.join(frontend_path,"static/favicon.ico"))
+    if os.path.exists(os.path.join(frontend_path,"favicon.ico")):
+        return FileResponse(os.path.join(frontend_path,"favicon.ico"))
     else:
         return ORJSONResponse(content={"error": "File not found"}, status_code=404)
 
