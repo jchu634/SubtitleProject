@@ -23,6 +23,7 @@ declare global {
         spawnSettingsWindow: () => void;
         killSettingsWindow: () => void;
         createToastOnMainWindow: (title: string, description: string, duration: number) => void;
+        setWindowAlwaysOnTop: (alwaysOnTop: boolean) => void;
       };
     };
     createToast: (title: string, description: string, duration: number) => void;

@@ -103,6 +103,11 @@ const SettingsFormSchema = z.object({
       required_error: "Please select an option to save subtitles",
     }
   ),
+  alwaysOnTop: z.boolean(
+    {
+      required_error: "Please select an option to keep window always on top",
+    }
+  ),
   
 })
 
@@ -114,6 +119,7 @@ export default function Home() {
     defaultValues: {
       device_index: 0,
       saveSubtitles: false,
+      alwaysOnTop: false,
     },
   });
 
@@ -124,8 +130,10 @@ export default function Home() {
     .then(set => {
       console.log(set);
       if (!set) {
-        toast({
+        toast(
+          {
             title: "Error",
+            variant: "destructive",
             description: "Error setting device",
             duration: 2000,
         })
@@ -140,11 +148,15 @@ export default function Home() {
       console.error('Error:', error);
       toast({
         title: "Error",
+        variant: "destructive",
         description: "Error setting device",
         duration: 2000,
       });
       window.pywebview.api.createToastOnMainWindow("Error", "Error setting device: Please try again later.", 2000);
     });
+    if (values.alwaysOnTop) {
+      window.pywebview.api.setWindowAlwaysOnTop(true);
+    }
   }
 
   function closeSettingsWindow(){
@@ -218,8 +230,26 @@ export default function Home() {
                             </FormItem>
                             )}
                         />
+                        <FormField  
+                            control={form.control}
+                            name="alwaysOnTop"
+                            render={({ field }) => (
+                            <FormItem>
+                                <div className="flex items-center space-x-2">
+                                <label
+                                    htmlFor="save"
+                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                >
+                                    Pin transcription window to always stay on top.
+                                </label>
+                                <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                                </div>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
                     </div>
-                    <DialogFooter className="mt-[60px]">
+                    <DialogFooter className="mt-[35px]">
                         <div className="flex justify-end">
                             <Button type="submit">Save changes</Button>
                         </div>

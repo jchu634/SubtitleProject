@@ -21,9 +21,17 @@ class SettingsWindowApi():
     
     def setWindow(self,window):
         self._window = window
-
+    
     def createToastOnMainWindow(self, title, message, duration):
         window.evaluate_js(f"createToast('{title}','{message}',{duration})")
+    
+    def setWindowAlwaysOnTop(self, value):
+        print("Setting window on top")
+        try:
+            window.on_top = value
+            print("Window is now on top")
+        except Exception as e:
+            print(e)
 
 class Api():
     def __init__(self, settings_window=None):
@@ -51,9 +59,17 @@ class Api():
         if self.settings_window:
             self.settings_window.destroy()
             self.settings_window = None
-    
+
     def createToastOnMainWindow(self, title, message, duration):
         window.evaluate_js(f"createToast('{title}','{message}',{duration})")
+    
+    def setWindowAlwaysOnTop(self, value):
+        print("Setting window on top")
+        try:
+            window.on_top = value
+            print("Window is now on top")
+        except Exception as e:
+            print(e)
 
 if __name__ == "__main__":
     t = threading.Thread(target=start_server)
@@ -74,5 +90,5 @@ if __name__ == "__main__":
     window = webview.create_window("Ryzen Transcription", "http://localhost:6789", width=700, height=295, frameless=True, js_api=api_instance)
     window.events.closed += on_closed
     
-    webview.start(debug=True)
+    webview.start(private_mode=False) # Persist settings
     sys.exit()
