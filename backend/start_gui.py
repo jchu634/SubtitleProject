@@ -71,7 +71,7 @@ if __name__ == "__main__":
         except Exception as e:
             print(e)
     
-    window = webview.create_window("Ryzen Transcription", "http://localhost:6789", width=800, height=400, frameless=True, js_api=api_instance)
+    window = webview.create_window("Ryzen Transcription", "http://localhost:6789", width=700, height=295, frameless=True, js_api=api_instance)
     window.events.closed += on_closed
     
     webview.start(debug=True)
