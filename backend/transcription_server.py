@@ -149,8 +149,13 @@ onnx_decoder_path: str = Settings.onnx_decoder_path
 encoder_target: str = Settings.encoder_target
 decoder_target: str = Settings.decoder_target
 
-model = load_model('tiny', onnx_encoder_path, onnx_decoder_path, encoder_target, decoder_target)
 debug_enabled = Settings.ENV == "development"
+debug_enabled = False
+transcription = ['']
+
+@transcribe_api.get("/transcription")
+def get_transcription():
+    return transcription
 
 @transcribe_api.websocket("/transcription_feed")
 async def transcription_ws_endpoint(websocket: WebSocket):
@@ -175,7 +180,7 @@ async def transcription_ws_endpoint(websocket: WebSocket):
     else:
         source = sr.Microphone(sample_rate=16000)
 
-    transcription = ['']
+    
 
     with source:
         recorder.adjust_for_ambient_noise(source)
@@ -196,7 +201,9 @@ async def transcription_ws_endpoint(websocket: WebSocket):
     try:        
         if debug_enabled:
             debug_folder = uuid.uuid4().hex     # UUID Folder name for storing debug audio files
-
+        transcription = ['']
+        model = load_model('tiny', onnx_encoder_path, onnx_decoder_path, encoder_target, decoder_target)
+        await websocket.send_text("Transcription Ready")
         while True:
             now = datetime.utcnow()
             
@@ -204,20 +211,15 @@ async def transcription_ws_endpoint(websocket: WebSocket):
             if not data_queue.empty():
                 phrase_complete = False
 
-                # Initialize phrase_start_time if not already set
-                if 'phrase_start_time' not in locals() or phrase_start_time is None:
-                    phrase_start_time = now
-
-
                 # If enough time has passed between recordings, consider the phrase complete.
-                # Additionally, due to model limitations, kill the phrase after 10 seconds as the model becomes less accurate.
+                # Due to model limitations, the timeout is set to 10 seconds as the model becomes less accurate.
                 # Clear the current working audio buffer to start over with the new data.
-                if phrase_time and (now - phrase_time > timedelta(seconds=phrase_timeout) or now - phrase_start_time > timedelta(seconds=10)):
+                print("Transcribing something new")
+                if phrase_time and now - phrase_time > timedelta(seconds=phrase_timeout):
                     phrase_complete = True
-                    phrase_start_time = None
                     print("PHRASE COMPLETE")
                     await websocket.send_text("[PHRASE_COMPLETE]")
-
+                    print("Websocket sent phrase complete")
 
                 phrase_time = now   # Last time new audio data was received from the queue.
                 
