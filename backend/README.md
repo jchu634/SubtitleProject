@@ -1,4 +1,48 @@
+# Ryzen-Transcription Backend
+This is a backend for the Ryzen-Transcription project.\
+It is built upon [Real Time Whisper Transcription](https://github.com/davabase/whisper_real_time) and [AMD Transformers demo](https://account.amd.com/en/forms/downloads/ryzen-ai-software-platform-xef.html?filename=transformers_2308.zip).
+
+## Installation
+1. Follow the instructions and install the Ryzen-AI Software
+    - https://ryzenai.docs.amd.com/en/latest/inst.html
+    - Re-use or duplicate the conda environment created in the installation process.
+2. Install Additional Dependencies
+    - A non-exhaustive list of dependencies can be found in the `additional_requirements.txt` file
+    ```powershell
+      cd backend
+      pip install -r additional_requirements.txt
+    ```
+3. Build the whisper-onnx model
+    ```powershell
+      ./build.ps1
+    ```
+
+## How to run and utilize the backend
+1. Run the backend api
+    ```powershell
+      python start_webserver.py
+    ```
+2. You should be able to access the api documentation at `http://localhost:6789/docs`
+
+## Troubleshooting:
+If you run into the error
+```powershell
+InternalError: Check failed: *it != type_key2index_.end()) is false: Cannot find type tir.Load. Did you forget to register the node by TVM_REGISTER_NODE_TYPE ?
+```
+Then run build.ps1 again
+```powershell
+./build.ps1
+```
+- It may spit out an additional error:
+  ```powershell
+  The process cannot access the file because it is being used by another process:...
+  build whisper-onnx demo failed.
+  ```
+  This should not cause any issues, and you can try running the backend again.
+
 # whisper-onnx
+These are the original instructions for the whisper-onnx project.\
+They have been included here for reference.
 
 This example shows how to deploy Whisper models by using onnxruntime framework on custom AIE+CPU backends.
 
@@ -260,3 +304,26 @@ We have some test results on test-clean dataset of LibriSpeech, the audios which
 |cpu-aie|10|0.0926|4.182|1.486|4.384|26.684|153.75|
 |cpu-aie|200|0.1597|2.47|1.539|2.311|30.403|2401.1|
 |cpu-aie|2007 (all)|0.1901|3.122|1.666|3.03|38.606|27464.82|
+
+## whisper-onnx original license file 
+MIT License
+
+Copyright (c) 2023 Katsuya Hyodo
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
