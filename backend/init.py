@@ -37,11 +37,10 @@ def create_app():
     )
 
     from home import home
-    from utilities import sound, transcription
+    from utilities import sound
     import transcription_server
     
     app.include_router(sound.utils_api)
-    app.include_router(transcription.utils_api)
     app.include_router(transcription_server.transcribe_api)
 
     # Always include the home router last as it contains a catch all route which will prevent other routes from being accessed

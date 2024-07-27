@@ -9,12 +9,12 @@ class settingsModel(BaseSettings):
     SOUND_DEVICE: int = 0
     energy_threshold: int = 1000
     record_timeout: int = 2
-    phrase_timeout: int = 3
+    phrase_timeout: int = 5
 
-    encoder_target: str = 'cpu'
-    decoder_target: str = 'aie'
-    onnx_encoder_path: str = "models\\float-encoder.onnx"
-    onnx_decoder_path: str = "models\\quant-decoder.onnx"
+    encoder_target: str = 'aie'
+    decoder_target: str = 'cpu'
+    onnx_encoder_path: str = "models\\quant-encoder.onnx"
+    onnx_decoder_path: str = "models\\float-decoder.onnx"
     
     ENV: str = "development"
     LOGGING: bool = True
