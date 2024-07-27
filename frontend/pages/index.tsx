@@ -36,7 +36,7 @@ export default function Home() {
 
   const { setTheme } = useTheme()
   const [phrase, setPhrase] = useState("");
-  const [transcription, setTranscription] = useState<string[]>([]);
+  const [transcription, setTranscription] = useState("");
   const [downloadButtonActive, setDownloadButtonActive] = useState(false);
   const [wsConnected, setWsConnected] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
@@ -61,7 +61,7 @@ export default function Home() {
       setDownloadButtonActive(false);
     };
     ws.onmessage = function(event) {
-      console.log(event.data);
+      // console.log(event.data);
       if (event.data === "[PHRASE_COMPLETE]") {
         console.log("Phrase Acknowledged");
         // setTranscription(prevTranscription => {
@@ -75,12 +75,12 @@ export default function Home() {
         // However, there is a bug in the backend which only acknowledges that the phrase is complete sometimes.
         // Therefore, this is run every time a new transcription is received.
         // #TODO: Remove this when the backend is fixed.
-        setTranscription(prevTranscription => {
-          const updatedTranscription = [...prevTranscription, phrase];
-          console.log("Updated Transcription" + updatedTranscription); // Log the updated transcription
-          return updatedTranscription;
-        });
         setPhrase(event.data);
+        setTranscription(prevTranscription => {
+          const newTranscription = prevTranscription + "\n" + event.data;
+          console.log("New Transcription: " + newTranscription);
+          return newTranscription;
+        });
       }
       ws.send("ack");
     };
@@ -94,11 +94,7 @@ export default function Home() {
       return;
     }
     if (wsRef.current) {
-      // setTranscription(prevTranscription => {
-      //   const updatedTranscription = [...prevTranscription, phrase];
-      //   console.log("Updated Transcription" + updatedTranscription); // Log the updated transcription
-      //   return updatedTranscription;
-      // });
+      // setTranscription(transcription + "\n" + phrase);
       wsRef.current.close(1000, "Closing connection Normally");
       wsRef.current = null;
     }
@@ -114,7 +110,8 @@ export default function Home() {
   
   
   function downloadTranscription() {
-    const blob = new Blob(transcription, { type: 'text/plain' });
+    const blob = new Blob([transcription], { type: 'text/plain' });
+    console.log(transcription);
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.download = 'transcription.txt';
