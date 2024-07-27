@@ -1,5 +1,5 @@
 # Ryzen-Transcription Backend
-This is a backend for the Ryzen-Transcription project.\
+This is a backend built to run deliver real-time subtitles using RyzenAI.\
 It is built upon [Real Time Whisper Transcription](https://github.com/davabase/whisper_real_time) and [AMD Transformers demo](https://account.amd.com/en/forms/downloads/ryzen-ai-software-platform-xef.html?filename=transformers_2308.zip).
 
 ## Installation
@@ -17,8 +17,8 @@ It is built upon [Real Time Whisper Transcription](https://github.com/davabase/w
       ./build.ps1
     ```
 
-## How to run and utilize the backend
-1. Run the backend api
+## Running the Backend
+1. Start the backend API webserver.
     ```powershell
       python start_webserver.py
     ```
