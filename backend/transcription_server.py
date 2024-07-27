@@ -169,7 +169,7 @@ async def transcription_ws_endpoint(websocket: WebSocket):
     recorder.energy_threshold = Settings.energy_threshold
     record_timeout = Settings.record_timeout
     phrase_timeout = Settings.phrase_timeout   
-    recorder.dynamic_energy_threshold = True    # Set to True to always record, (Dynamic energy compensation lowers the energy threshold dramatically to a point where the SpeechRecognizer never stops recording.)
+    recorder.dynamic_energy_threshold = False    # Set to True to always record, (Dynamic energy compensation lowers the energy threshold dramatically to a point where the SpeechRecognizer never stops recording.)
     
     audio = pyaudio.PyAudio()  
     mic = Settings.SOUND_DEVICE
@@ -202,6 +202,7 @@ async def transcription_ws_endpoint(websocket: WebSocket):
         if debug_enabled:
             debug_folder = uuid.uuid4().hex     # UUID Folder name for storing debug audio files
         transcription = ['']
+        
         model = load_model('tiny', onnx_encoder_path, onnx_decoder_path, encoder_target, decoder_target)
         await websocket.send_text("Transcription Ready")
         while True:
