@@ -4,6 +4,7 @@ import webview
 import sys
 import threading
 import uvicorn
+import os
 
 app = create_app()
 def start_server():
@@ -46,13 +47,14 @@ class Api():
            self.settings_window = None
         window.destroy()
         sys.exit()
+        os._exit(0)
     
     def spawnSettingsWindow(self):
         if self.settings_window:
             self.settings_window.destroy()
             self.settings_window = None
         settingsApi = SettingsWindowApi()
-        self.settings_window = webview.create_window("Settings", "http://localhost:6789/settings", width=470, height=395, frameless=True, js_api=settingsApi)
+        self.settings_window = webview.create_window("Settings", "http://localhost:6789/settings", width=500, height=450, frameless=True, js_api=settingsApi)
         settingsApi.setWindow(self.settings_window)
 
     def killSettingsWindow(self):
@@ -87,8 +89,8 @@ if __name__ == "__main__":
         except Exception as e:
             print(e)
     
-    window = webview.create_window("Ryzen Transcription", "http://localhost:6789", width=700, height=295, frameless=True, js_api=api_instance)
+    window = webview.create_window("Ryzen Transcription", "http://localhost:6789", width=700, height=340, frameless=True, js_api=api_instance)
     window.events.closed += on_closed
     
     webview.start(private_mode=False) # Persist settings
-    sys.exit()
+    os._exit(0)
