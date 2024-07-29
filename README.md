@@ -30,3 +30,6 @@ This is a project for a windows GUI application for subtitling system audio in s
 - The application may crash if the user opens the settings window, selects the "Pin window to always stay on top" option, and then closes the settings window to quickly. (i.e. <2 seconds)
     - This happens as the settings window has not been able to load the Settings javascript-python api bridge before it is closed.
     - This issue can be mitigated by waiting at least 3 seconds after selecting the "Pin window to always stay on top" option before closing the settings window.
+
+## Acknowledgements
+This application is built on top of the public domain work done at https://github.com/davabase/whisper_real_time.
