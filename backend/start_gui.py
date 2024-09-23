@@ -7,8 +7,11 @@ import uvicorn
 import os
 
 app = create_app()
+
+
 def start_server():
     uvicorn.run(app, port=6789)
+
 
 class SettingsWindowApi():
     def __init__(self):
@@ -19,13 +22,13 @@ class SettingsWindowApi():
 
     def killSettingsWindow(self):
         self._window.destroy()
-    
-    def setWindow(self,window):
+
+    def setWindow(self, window):
         self._window = window
-    
+
     def createToastOnMainWindow(self, title, message, duration):
         window.evaluate_js(f"createToast('{title}','{message}',{duration})")
-    
+
     def setWindowAlwaysOnTop(self, value):
         print("Setting window on top")
         try:
@@ -33,6 +36,7 @@ class SettingsWindowApi():
             print("Window is now on top")
         except Exception as e:
             print(e)
+
 
 class Api():
     def __init__(self, settings_window=None):
@@ -43,18 +47,19 @@ class Api():
 
     def killWindow(self):
         if self.settings_window:
-           self.settings_window.destroy()
-           self.settings_window = None
+            self.settings_window.destroy()
+            self.settings_window = None
         window.destroy()
         sys.exit()
         os._exit(0)
-    
+
     def spawnSettingsWindow(self):
         if self.settings_window:
             self.settings_window.destroy()
             self.settings_window = None
         settingsApi = SettingsWindowApi()
-        self.settings_window = webview.create_window("Settings", "http://localhost:6789/settings", width=500, height=450, frameless=True, js_api=settingsApi)
+        self.settings_window = webview.create_window(
+            "Settings", "http://localhost:6789/settings", width=500, height=480, frameless=True, js_api=settingsApi)
         settingsApi.setWindow(self.settings_window)
 
     def killSettingsWindow(self):
@@ -64,7 +69,7 @@ class Api():
 
     def createToastOnMainWindow(self, title, message, duration):
         window.evaluate_js(f"createToast('{title}','{message}',{duration})")
-    
+
     def setWindowAlwaysOnTop(self, value):
         print("Setting window on top")
         try:
@@ -72,6 +77,7 @@ class Api():
             print("Window is now on top")
         except Exception as e:
             print(e)
+
 
 if __name__ == "__main__":
     t = threading.Thread(target=start_server)
@@ -85,12 +91,13 @@ if __name__ == "__main__":
         print("Main Window is Closed")
         try:
             print("Terminating Settings Window")
-            api_instance.killSettingsWindow()            
+            api_instance.killSettingsWindow()
         except Exception as e:
             print(e)
-    
-    window = webview.create_window("Ryzen Transcription", "http://localhost:6789", width=700, height=340, frameless=True, js_api=api_instance)
+
+    window = webview.create_window("Ryzen Transcription", "http://localhost:6789",
+                                   width=700, height=340, frameless=True, js_api=api_instance)
     window.events.closed += on_closed
-    
-    webview.start(private_mode=False) # Persist settings
+
+    webview.start(private_mode=False)  # Persist settings
     os._exit(0)
