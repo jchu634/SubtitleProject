@@ -39,7 +39,12 @@ export default function Home() {
   const [transcription, setTranscription] = useState("");
   const [downloadButtonActive, setDownloadButtonActive] = useState(false);
   const [wsConnected, setWsConnected] = useState(false);
+  const [sseConnected, setSseConnected] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
+  const sseSource = useRef<EventSource | null>(null);
+
+  
 
   // useEffect(() => {
   //   if (typeof window !== 'undefined' && localStorage.getItem("settings") !== null) {
@@ -50,6 +55,73 @@ export default function Home() {
   //   }
   // }, []);
 
+  useEffect(() => {
+    if (phrase && sseConnected){
+      setTranscription((prevTranscription) => {
+        const newTranscription = prevTranscription + "\n" + phrase;
+        return newTranscription;
+      });
+    }
+  }, [phrase])
+  function startTranscribing(){
+    if (localStorage.getItem("settings") !== null) {
+      const settings = JSON.parse(localStorage.getItem("settings") || "");
+      if (settings.transcriptionSource === "websocket") {
+        startWebsocket();
+      } else if (settings.transcriptionSource === "sse") {
+        startSse();
+      } else {
+        console.error("No transcription source set, Falling back to websocket");
+        startWebsocket();
+      }
+      setIsTranscribing(true);
+      setTranscription(""); // Clear previous transcriptions
+    }
+  }
+  function stopTranscribing(){
+    if (localStorage.getItem("settings") !== null) {
+      const settings = JSON.parse(localStorage.getItem("settings") || "");
+      if (settings.transcriptionSource === "websocket") {
+        stopWebsocket();
+      } else if (settings.transcriptionSource === "sse") {
+        stopSse();
+      } else {
+        console.error("No transcription source set, Falling back to websocket");
+        stopWebsocket();
+      }
+      setIsTranscribing(false);
+    }
+  }
+  function startSse() {
+    if (sseConnected) {
+      console.log("SSE already connected");
+      return;
+    }
+    const sse = new EventSource("http://localhost:6789/transcription_feed_sse");
+    
+    // Event for each line of transcription
+    sse.addEventListener("transcription_ready", function (event) {
+      setPhrase(event.data);
+    
+      setTranscription((prevTranscription) => {
+        const newTranscription = prevTranscription + "\n" + event.data;
+        return newTranscription;
+      });
+    });
+    
+    // Currently broken
+    // // Event when transcription phrase is complete
+    // sse.addEventListener("phrase_complete", function (event) {
+    //   setPhrase(event.data);
+    // });
+    
+    // Event when Model is loaded and ready to transcribe
+    sse.addEventListener("transcription", function (event) {
+      setPhrase(event.data);
+    });
+    sseSource.current = sse;
+    setSseConnected(true);
+  }
   function startWebsocket() {
     if (wsConnected) {
       console.log("Websocket already connected");
@@ -88,6 +160,24 @@ export default function Home() {
     setWsConnected(true);
   }
 
+  function stopSse(){
+    if (!sseConnected) {
+      console.log("SSE already disconnected");
+      return;
+    }
+    if (sseSource.current) {
+      sseSource.current.close();
+      sseSource.current = null;
+    }
+    if (localStorage.getItem("settings") !== null) {
+      const settings = JSON.parse(localStorage.getItem("settings") || "");
+      if (settings.saveSubtitles) {
+        downloadTranscription();
+      }
+    }
+    setSseConnected(false);
+    setDownloadButtonActive(true);
+  }
   function stopWebsocket() {
     if (!wsConnected) {
       console.log("Websocket already disconnected");
@@ -181,10 +271,10 @@ export default function Home() {
         </Button>
       </div>
       <div className="flex items-center">
-        { !wsConnected ? (
-          <Button onClick={startWebsocket} size="lg" className="mr-4">Start Transcribing</Button>
+        { !isTranscribing ? (
+          <Button onClick={startTranscribing} size="lg" className="mr-4">Start Transcribing</Button>
         ):(
-          <Button variant="destructive" onClick={stopWebsocket} size="lg" className="mr-4">Stop Transcribing</Button>
+          <Button variant="destructive" onClick={stopTranscribing} size="lg" className="mr-4">Stop Transcribing</Button>
         )}
         {downloadButtonActive ? (
           <Button size="lg" onClick={downloadTranscription}>

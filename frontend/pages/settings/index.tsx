@@ -108,6 +108,8 @@ const SettingsFormSchema = z.object({
       required_error: "Please select an option to keep window always on top",
     }
   ),
+  transcriptionSource: z
+    .enum(["websocket", "sse"]),
   
 })
 
@@ -120,6 +122,7 @@ export default function Home() {
       device_index: 0,
       saveSubtitles: false,
       alwaysOnTop: false,
+      transcriptionSource: "websocket",
     },
   });
 
@@ -236,13 +239,34 @@ export default function Home() {
                             render={({ field }) => (
                             <FormItem>
                                 <div className="flex items-center space-x-2">
-                                <label
-                                    htmlFor="save"
-                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                >
-                                    Pin transcription window to always stay on top.
-                                </label>
-                                <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                                  <label
+                                      htmlFor="save"
+                                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                  >
+                                      Pin transcription window to always stay on top.
+                                  </label>
+                                  <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                                </div>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        <FormField  
+                            control={form.control}
+                            name="transcriptionSource"
+                            render={({ field }) => (
+                            <FormItem>
+                                <div className="flex items-center space-x-2">
+                                  <label
+                                      htmlFor="save"
+                                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                  >
+                                      Enable SSE API for transcription. (Experimental)
+                                  </label>
+                                  <Checkbox 
+                                    checked={field.value === "sse"} 
+                                    onCheckedChange={(checked) => field.onChange(checked ? "sse" : "websocket")} 
+                                  />
                                 </div>
                                 <FormMessage />
                             </FormItem>
