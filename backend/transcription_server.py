@@ -5,7 +5,7 @@ import uuid
 import asyncio
 from time import sleep
 from queue import Queue
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Request
 from config import Settings
 
 # Transription Imports
@@ -18,6 +18,8 @@ import pyaudiowpatch as pyaudio
 
 # Audio Bridge
 import audioop
+
+from sse_starlette.sse import EventSourceResponse
 
 
 class AudioBridge(sr.AudioSource):
@@ -166,6 +168,149 @@ transcription = ['']
 @transcribe_api.get("/transcription")
 def get_transcription():
     return transcription
+
+
+SSE_RETRY_TIMEOUT = 10000
+
+
+@transcribe_api.get("/transcription_feed_sse")
+async def transcription_sse_endpoint(request: Request):
+    async def event_generator():
+        # Thread safe Queue for passing data from the threaded recording callback.
+        data_queue = Queue()
+        # We use SpeechRecognizer to record our audio because it has a nice feature where it can detect when speech ends.
+        recorder = sr.Recognizer()
+        recorder.energy_threshold = Settings.energy_threshold
+        record_timeout = Settings.record_timeout
+        phrase_timeout = Settings.phrase_timeout
+
+        # Set to True to always record, (Dynamic energy compensation lowers the energy threshold dramatically to a point where the SpeechRecognizer never stops recording.)
+        recorder.dynamic_energy_threshold = False
+
+        audio = pyaudio.PyAudio()
+        mic = Settings.SOUND_DEVICE
+
+        if "Loopback" in audio.get_device_info_by_index(mic)["name"]:
+            # Note: Loopback interfaces do not support sample_rates (https://github.com/s0d3s/PyAudioWPatch/issues/15#issuecomment-2025114713)
+            source = AudioBridge(device_index=mic)
+        else:
+            source = sr.Microphone(sample_rate=16000)
+
+        with source:
+            recorder.adjust_for_ambient_noise(source)
+
+        def record_callback(_, audio: sr.AudioData) -> None:
+            """
+            Threaded callback function to receive audio data when recordings finish.
+            audio: An AudioData containing the recorded bytes.
+            """
+            # Grab the raw bytes and push it into the thread safe queue.
+            data = audio.get_raw_data()
+            data_queue.put(data)
+
+        # Create a background thread that will pass us raw audio bytes.
+        # We could do this manually but SpeechRecognizer provides a nice helper.
+        recorder.listen_in_background(
+            source, record_callback, phrase_time_limit=record_timeout)
+
+        if debug_enabled:
+            # UUID Folder name for storing debug audio files
+            debug_folder = uuid.uuid4().hex
+        transcription = ['']
+
+        model = load_model('tiny', onnx_encoder_path,
+                           onnx_decoder_path, encoder_target, decoder_target)
+        yield {
+            "event": "transcription_ready",
+            "id": "message-id",
+            "retry": SSE_RETRY_TIMEOUT,
+            "data": "Transcription Ready"
+        }
+
+        # The last time a recording was retrieved from the queue.
+        phrase_time = None
+        while True:
+            if await request.is_disconnected():
+                print("Client disconnected")
+                break
+
+            now = datetime.utcnow()
+
+            # Pull raw recorded audio from the queue.
+            if not data_queue.empty():
+                phrase_complete = False
+
+                # If enough time has passed between recordings, consider the phrase complete.
+                # Due to model limitations, the timeout is set to 10 seconds as the model becomes less accurate.
+                # Clear the current working audio buffer to start over with the new data.
+                print("Transcribing something new")
+                if phrase_time and now - phrase_time > timedelta(seconds=phrase_timeout):
+                    phrase_complete = True
+                    print("PHRASE COMPLETE")
+                    yield {
+                        "event": "phrase_complete",
+                        "id": "message-id",
+                        "retry": SSE_RETRY_TIMEOUT,
+                        "data": "[PHRASE_COMPLETE]"
+                    }
+
+                # Last time new audio data was received from the queue.
+                phrase_time = now
+
+                # Combine audio data from queue
+                audio_data = b''.join(data_queue.queue)
+                data_queue.queue.clear()
+
+                # Convert in-ram buffer to something the model can use directly without needing a temp file.
+                # Convert data from 16 bit wide integers to floating point with a width of 32 bits.
+                # Clamp the audio stream frequency to a PCM wavelength compatible default of 32768hz max.
+                audio_np = np.frombuffer(
+                    audio_data, dtype=np.int16).astype(np.float32) / 32768.0
+
+                if debug_enabled:
+                    save_debug_audio(
+                        audio_np, source.SAMPLE_RATE, debug_folder)
+
+                # Note: Arguments are hard-coded as the model does not fully support alternative options.
+                result = transcribe(model=model,
+                                    audio=audio_np,
+                                    temperature=[0],
+                                    task="transcribe",
+                                    language='en',
+                                    verbose=False,
+                                    best_of=5,
+                                    beam_size=5,
+                                    patience=None,
+                                    length_penalty=0.08,
+                                    suppress_tokens="-1",
+                                    initial_prompt=None,
+                                    condition_on_previous_text=None,
+                                    compression_ratio_threshold=2.4,
+                                    logprob_threshold=-1,
+                                    no_speech_threshold=0.6
+                                    )
+                text = result['text'].strip()
+
+                # If we detected a pause between recordings, add a new item to our transcription.
+                # Otherwise edit the existing one.
+                if phrase_complete:
+                    transcription.append(text)
+                else:
+                    transcription[-1] = text
+
+                # Send the latest transcription line to the client.
+                yield {
+                    "event": "transcription",
+                    "id": "message-id",
+                    "retry": SSE_RETRY_TIMEOUT,
+                    "data": transcription[-1]
+                }
+
+            else:
+                # Infinite loops are bad for processors, must sleep.
+                asyncio.sleep(600)
+
+    return EventSourceResponse(event_generator())
 
 
 @transcribe_api.websocket("/transcription_feed")

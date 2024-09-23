@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SSE Transcription</title>
+</head>
+<body>
+    <ul id="messages"></ul>
+
+    <button onclick="disconnect(event)">Disconnect</button>
+
+    <script>
+        const evtSource = new EventSource("http://127.0.0.1:6789/transcription_feed_sse");
+
+        function addMessage(message) {
+            const messages = document.getElementById('messages');
+            const messageElement = document.createElement('li');
+            messageElement.textContent = message;
+            messages.appendChild(messageElement);
+        }
+
+        evtSource.addEventListener("new_message", function (event) {
+            // Logic to handle status updates
+            addMessage(event.data);
+        });
+        evtSource.addEventListener("transcription_ready", function (event) {
+            // Logic to handle status updates
+            addMessage(event.data);
+        });
+        evtSource.addEventListener("phrase_complete", function (event) {
+            // Logic to handle status updates
+            addMessage(event.data);
+        });
+        evtSource.addEventListener("transcription", function (event) {
+            // Logic to handle status updates
+            addMessage(event.data);
+        });
+
+        evtSource.addEventListener("end_event", function (event) {
+            addMessage(event.data);
+            evtSource.close();
+        });
+
+        // Cleanup function to close the EventSource connection
+        window.addEventListener('beforeunload', function () {
+            evtSource.close();
+        });
+        // var eventSource = new EventSource("http://localhost:6789/stream");
+
+        // eventSource.onmessage = function(event) {
+        //     var messages = document.getElementById('messages');
+        //     var message = document.createElement('li');
+        //     var content = document.createTextNode(event.data);
+        //     console.log(event.data);
+        //     console.log("THIS RAN")
+        //     message.appendChild(content);
+        //     messages.appendChild(message);
+        // };
+
+        function disconnect(event) {
+            evtSource.close();
+            console.log("disconnected");
+            event.preventDefault();
+        }
+    </script>
+</body>
+</html>
