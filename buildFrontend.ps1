@@ -24,7 +24,7 @@ cd $root
 # Remove the old build files from the backend folder
 # Exclude the test html files [test_websocket_transcription.html, test_websocket.html] from being deleted
 # Exclude static folder from being deleted
-Get-ChildItem -Path $backendFrontendFolder -Recurse -Exclude test_websocket_transcription.html, test_websocket.html, static | Remove-Item -Recurse -Force
+Get-ChildItem -Path $backendFrontendFolder -Recurse -Exclude test_websocket_transcription.html, test_sse_transcription.html, test_websocket.html, static | Remove-Item -Recurse -Force
 
 # Copy the built files to the backend folder
 Get-ChildItem -Path $frontendBuildFolder -Recurse | ForEach-Object {
