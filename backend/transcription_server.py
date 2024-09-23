@@ -175,6 +175,8 @@ SSE_RETRY_TIMEOUT = 10000
 
 @transcribe_api.get("/transcription_feed_sse")
 async def transcription_sse_endpoint(request: Request):
+    print("Transcribing via SSE ")
+
     async def event_generator():
         # Thread safe Queue for passing data from the threaded recording callback.
         data_queue = Queue()
@@ -299,13 +301,13 @@ async def transcription_sse_endpoint(request: Request):
                     transcription[-1] = text
 
                 # Send the latest transcription line to the client.
+                print("Transcription: ", transcription[-1])
                 yield {
                     "event": "transcription",
                     "id": "message-id",
                     "retry": SSE_RETRY_TIMEOUT,
                     "data": transcription[-1]
                 }
-
             else:
                 # Infinite loops are bad for processors, must sleep.
                 asyncio.sleep(600)
@@ -315,6 +317,7 @@ async def transcription_sse_endpoint(request: Request):
 
 @transcribe_api.websocket("/transcription_feed")
 async def transcription_ws_endpoint(websocket: WebSocket):
+    print("Transcribing via Websocket")
     # await manager.connect(websocket)
     await websocket.accept()
     active_connections_set.add(websocket)
