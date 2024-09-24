@@ -23,6 +23,7 @@ This is a project for a windows GUI application for subtitling system audio in s
 - The subtitle transcription for speaker loopback inputs is less accurate compared to direct microphone inputs.
 
 #### Performance Issue After Stopping Transcription:
+- Note: This is fixed if the experimental SSE API is enabled in the settings
 - After clicking Stop Transcription, the application may become very slow due to ongoing backend transcription jobs. The application will return to normal speed after a short delay.
 - Note: The download subtitles button remains functional and works independently of the backend.
 
